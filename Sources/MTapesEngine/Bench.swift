@@ -1,3 +1,4 @@
+import AVFoundation
 import Darwin
 import Foundation
 
@@ -111,5 +112,96 @@ public enum Bench {
             cpuCoresByProcess: byProcess, cpuCoresTracked: tracked, cpuCoresSystem: system,
             peakResidentMegabytes: Double(ResourceMeter.peakResidentBytes()) / 1_000_000)
         return (result, package)
+    }
+}
+
+/// Qualité visuelle du brut par rapport à la référence quasi sans perte (mêmes images), mesurée avec ffmpeg.
+public struct QualityResult: Codable {
+    public var ssim: Double          // 1,0 = identique
+    public var psnr: Double          // dB
+    public var rawMegabytes: Double
+    public var referenceMegabytes: Double
+}
+
+public enum QualityCheck {
+    public static func measure(raw: URL, reference: URL) throws -> QualityResult {
+        let candidates = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg"]
+        guard let ffmpeg = candidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) else {
+            throw EngineError.writerFailed("ffmpeg introuvable (nécessaire pour mesurer la qualité)")
+        }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: ffmpeg)
+        process.arguments = ["-hide_banner", "-nostats", "-i", raw.path, "-i", reference.path,
+                             "-lavfi", "[0:v]format=yuv420p[a];[1:v]format=yuv420p[b];[a]split[a1][a2];[b]split[b1][b2];[a1][b1]ssim;[a2][b2]psnr",
+                             "-f", "null", "-"]
+        let pipe = Pipe()
+        process.standardError = pipe
+        process.standardOutput = Pipe()
+        try process.run()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        let text = String(decoding: data, as: UTF8.self)
+        func number(after marker: String, in line: String) -> Double? {
+            guard let r = line.range(of: marker) else { return nil }
+            let tail = line[r.upperBound...].prefix { "0123456789.inf".contains($0) }
+            return Double(tail)
+        }
+        var ssim = 0.0, psnr = 0.0
+        for line in text.split(separator: "\n").map(String.init) {
+            if line.contains("SSIM"), let v = number(after: "All:", in: line) { ssim = v }
+            if line.contains("PSNR"), let v = number(after: "average:", in: line) { psnr = v }
+        }
+        func mb(_ u: URL) -> Double {
+            Double((try? FileManager.default.attributesOfItem(atPath: u.path)[.size] as? NSNumber)??.int64Value ?? 0) / 1_000_000
+        }
+        return QualityResult(ssim: ssim, psnr: psnr, rawMegabytes: mb(raw), referenceMegabytes: mb(reference))
+    }
+}
+
+/// Banc d'essai de l'encodeur seul, sur une séquence source fixe (reproductible, sans écran ni autorisation) :
+/// relit un fichier vidéo (cadence variable conservée) et le réencode avec les réglages d'un profil.
+public struct EncoderBenchResult: Codable {
+    public var profile: String
+    public var pixelFormat: String
+    public var frames: Int
+    public var sourceSeconds: Double
+    public var encodeWallSeconds: Double
+    public var realtimeFactor: Double      // secondes de vidéo encodées par seconde réelle (≥ 1 : plus rapide que le temps réel)
+    public var megabytes: Double
+    public var megabytesPerMinute: Double
+}
+
+public enum EncoderBench {
+    public static func run(input: URL, output: URL, profile: QualityProfile, pixelFormat: PixelFormatChoice, quality: Double? = nil) async throws -> EncoderBenchResult {
+        let asset = AVURLAsset(url: input)
+        guard let track = try await asset.loadTracks(withMediaType: .video).first else { throw EngineError.noFrames }
+        let size = try await track.load(.naturalSize)
+        let duration = try await asset.load(.duration)
+        let reader = try AVAssetReader(asset: asset)
+        let out = AVAssetReaderTrackOutput(track: track, outputSettings: [
+            kCVPixelBufferPixelFormatTypeKey as String: pixelFormat.cvFormat,
+        ])
+        reader.add(out)
+        guard reader.startReading() else { throw EngineError.writerFailed(reader.error?.localizedDescription ?? "lecture impossible") }
+
+        try? FileManager.default.removeItem(at: output)
+        let writer = try VideoWriter(url: output, width: Int(size.width), height: Int(size.height), profile: profile,
+                                     fps: profile.maxFPS, tenBit: pixelFormat.isTenBit, quality: quality)
+        let start = Date()
+        var frames = 0
+        var lastPTS = CMTime.zero
+        while let sample = out.copyNextSampleBuffer() {
+            guard writer.appendWaiting(sample) else { throw EngineError.writerFailed(writer.failure ?? "image refusée") }
+            lastPTS = CMSampleBufferGetPresentationTimeStamp(sample)
+            frames += 1
+        }
+        try await writer.finish(endTime: duration)
+        let wall = Date().timeIntervalSince(start)
+        let seconds = max(CMTimeGetSeconds(duration), CMTimeGetSeconds(lastPTS))
+        let bytes = (try? FileManager.default.attributesOfItem(atPath: output.path)[.size] as? NSNumber)??.int64Value ?? 0
+        let mb = Double(bytes) / 1_000_000
+        return EncoderBenchResult(profile: profile.rawValue, pixelFormat: pixelFormat.rawValue, frames: frames, sourceSeconds: seconds,
+                                  encodeWallSeconds: wall, realtimeFactor: seconds / max(wall, 0.001), megabytes: mb,
+                                  megabytesPerMinute: seconds > 0 ? mb / seconds * 60 : 0)
     }
 }

@@ -24,7 +24,7 @@ struct Args {
 
     init(_ raw: [String]) {
         var i = 0
-        let valued: Set<String> = ["display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
+        let valued: Set<String> = ["input", "q", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
         while i < raw.count {
             let a = raw[i]
             if a.hasPrefix("--") {
@@ -73,7 +73,8 @@ mtapes <commande>
   doctor                         diagnostic : autorisations, encodeur matériel, qualité constante
   targets                        écrans, fenêtres et applications que l'on peut filmer (JSON)
   record [cible] --seconds N     enregistre une prise .tape (--out DIR --name NOM --profile light|balanced|max)
-  bench  [cible] --seconds N     enregistre et mesure : processeur, images, poids, délais (--keep garde la prise)
+  bench  [cible] --seconds N     enregistre et mesure : processeur, images, poids, délais (--keep garde la prise, --quality mesure SSIM/PSNR)
+  encode-bench --input F.mov     réencode une séquence source avec un profil et mesure poids, vitesse, SSIM, PSNR
   info   CHEMIN.tape             affiche les métadonnées d'une prise
 cible : --display N | --window ID | --app BUNDLE | --zone x,y,l,h   (par défaut : écran principal)
 options moteur : --fps N --pixel 420v|x420|BGRA
@@ -103,9 +104,26 @@ func run() async {
     case "bench":
         do {
             let dir = rest.flags.contains("keep") ? rest.outDir : URL(fileURLWithPath: NSTemporaryDirectory() + "mtapes-bench-\(getpid())", isDirectory: true)
-            let (result, package) = try await Bench.run(target: rest.target(), options: rest.captureOptions(), seconds: rest.seconds, outputDirectory: dir)
+            var options = rest.captureOptions()
+            let quality = rest.flags.contains("quality")
+            if quality { try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true); options.referenceURL = dir.appendingPathComponent("reference.mov") }
+            let (result, package) = try await Bench.run(target: rest.target(), options: options, seconds: rest.seconds, outputDirectory: dir)
             printJSON(result)
+            if quality, let ref = options.referenceURL {
+                do { printJSON(try QualityCheck.measure(raw: package.rawURL, reference: ref)) } catch { print("Qualité : \(error)") }
+            }
             if rest.flags.contains("keep") { print("Prise gardée : \(package.url.path)") } else { try? FileManager.default.removeItem(at: dir) }
+        } catch { fail("\(error)") }
+
+    case "encode-bench":
+        guard let input = rest.options["input"] else { fail("encode-bench attend --input source.mov") }
+        do {
+            let out = URL(fileURLWithPath: NSTemporaryDirectory() + "mtapes-enc-\(getpid()).mov")
+            let opts = rest.captureOptions()
+            let result = try await EncoderBench.run(input: URL(fileURLWithPath: input), output: out, profile: opts.profile, pixelFormat: opts.pixelFormat, quality: rest.options["q"].flatMap { Double($0) })
+            printJSON(result)
+            printJSON(try QualityCheck.measure(raw: out, reference: URL(fileURLWithPath: input)))
+            try? FileManager.default.removeItem(at: out)
         } catch { fail("\(error)") }
 
     case "info":

@@ -11,7 +11,7 @@ public enum QualityProfile: String, Codable, CaseIterable {
         switch self {
         case .light: return 0.50
         case .balanced: return 0.65
-        case .max: return 0.85
+        case .max: return 0.75
         }
     }
 

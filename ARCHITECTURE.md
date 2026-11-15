@@ -158,7 +158,7 @@ Objectif : une qualité visuelle maximale pour un fichier le plus léger possibl
 - **Files d'attente dédiées**, priorité temps réel, **aucun travail d'interface dans le chemin de capture** ; contre-pression comptée (images perdues, retard d'encodeur) et affichée dans le diagnostic.
 - **Fichier fragmenté** (fragment de 2 s) : une panne de courant ou un plantage laisse un brut lisible ; récupération proposée au prochain lancement.
 - **Image clé chaque seconde** (et aux changements de scène) : défilement et aperçu fluides dans la finition sans recalcul.
-- **Qualité constante** (`kVTCompressionPropertyKey_Quality` ou équivalent, à valider sur le matériel visé), repli sur un débit moyen contraint ; profil « Léger / Équilibré / Maximal / Sur mesure » réglé en un clic.
+- **Qualité constante** (`kVTCompressionPropertyKey_Quality`, confirmée sur le matériel : 0,50 Léger, 0,65 Équilibré, 0,75 Maximal, réglages tirés d'un balayage mesuré, voir `bench/RESULTS.md`), repli sur un débit moyen contraint ; profil « Léger / Équilibré / Maximal / Sur mesure » réglé en un clic.
 - **Son** : micro (`captureMicrophone`, macOS 15+) et son du Mac par SCK, AAC, pistes séparées.
 - **Suivi de fenêtre** : `WindowTracker` suit déplacement, redimensionnement et changement d'écran ; recadrage sans coupure dans le brut.
 - **Événements à part** : clics, clavier et trajectoire du pointeur (120 Hz) dans `events.jsonl` et `pointer.bin`, hors de l'image.

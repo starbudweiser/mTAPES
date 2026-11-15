@@ -11,6 +11,7 @@ public struct CaptureOptions {
     public var excludeOwnApp = true
     public var origin = "cli"
     public var client: String?
+    public var referenceURL: URL?                 // banc d'essai : copie quasi sans perte des mêmes images
     public init() {}
 }
 
@@ -20,6 +21,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
     private let queue = DispatchQueue(label: "mtapes.capture", qos: .userInteractive)
     private let stream: SCStream
     private let writer: VideoWriter
+    private let reference: VideoWriter?
     private let events = EventRecorder()
     private let package: TapePackage
     private var meta: TapeMeta
@@ -30,8 +32,8 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
     private var stopped = false
     fileprivate var holder: StreamHolder?
 
-    fileprivate init(stream: SCStream, writer: VideoWriter, package: TapePackage, meta: TapeMeta, requestedAt: Double) {
-        self.stream = stream; self.writer = writer; self.package = package; self.meta = meta; self.requestedAt = requestedAt
+    fileprivate init(stream: SCStream, writer: VideoWriter, reference: VideoWriter?, package: TapePackage, meta: TapeMeta, requestedAt: Double) {
+        self.stream = stream; self.writer = writer; self.reference = reference; self.package = package; self.meta = meta; self.requestedAt = requestedAt
         super.init()
     }
 
@@ -73,6 +75,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
             stats.firstFrameLatency = max(0, CMTimeGetSeconds(pts) - requestedAt)
         }
         writer.append(sampleBuffer)
+        reference?.append(sampleBuffer)
     }
 
     public func stream(_ stream: SCStream, didStopWithError error: Error) {
@@ -96,6 +99,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
         let first = CMTimeGetSeconds(firstPTS)
         let end = CMTime(seconds: stopRequested, preferredTimescale: 600)
         try await writer.finish(endTime: end)
+        try? await reference?.finish(endTime: end)
 
         stats.framesWritten = writer.written
         stats.framesDropped = writer.dropped
@@ -142,6 +146,7 @@ public enum Recorder {
         let package = try TapePackage.create(in: outputDirectory, name: options.name)
         let writer = try VideoWriter(url: package.rawURL, width: resolved.pixelWidth, height: resolved.pixelHeight,
                                      profile: options.profile, fps: fps, tenBit: options.pixelFormat.isTenBit)
+        let reference = try options.referenceURL.map { try VideoWriter(referenceURL: $0, width: resolved.pixelWidth, height: resolved.pixelHeight) }
         let meta = TapeMeta(
             id: UUID().uuidString.lowercased(), name: options.name, created: Date(), origin: options.origin,
             client: options.client, source: resolved.source, profile: options.profile.rawValue,
@@ -152,7 +157,7 @@ public enum Recorder {
         let requestedAt = HostClock.now()
         let holder = StreamHolder()
         let stream = SCStream(filter: resolved.filter, configuration: config, delegate: holder)
-        let session = RecordingSession(stream: stream, writer: writer, package: package, meta: meta, requestedAt: requestedAt)
+        let session = RecordingSession(stream: stream, writer: writer, reference: reference, package: package, meta: meta, requestedAt: requestedAt)
         holder.session = session
         session.holder = holder
         try await session.begin()

@@ -13,7 +13,20 @@ final class VideoWriter {
     private(set) var written = 0
     private(set) var dropped = 0
 
-    init(url: URL, width: Int, height: Int, profile: QualityProfile, fps: Int, tenBit: Bool) throws {
+    /// Référence quasi sans perte (ProRes 4444), pour mesurer la qualité du brut : mêmes images, mêmes horodatages.
+    init(referenceURL url: URL, width: Int, height: Int) throws {
+        writer = try AVAssetWriter(url: url, fileType: .mov)
+        let settings: [String: Any] = [AVVideoCodecKey: AVVideoCodecType.proRes4444, AVVideoWidthKey: width, AVVideoHeightKey: height]
+        input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        input.expectsMediaDataInRealTime = true
+        guard writer.canAdd(input) else { throw EngineError.writerFailed("référence refusée") }
+        writer.add(input)
+        guard writer.startWriting() else {
+            throw EngineError.writerFailed(writer.error?.localizedDescription ?? "démarrage impossible")
+        }
+    }
+
+    init(url: URL, width: Int, height: Int, profile: QualityProfile, fps: Int, tenBit: Bool, quality: Double? = nil) throws {
         writer = try AVAssetWriter(url: url, fileType: .mov)
         writer.movieFragmentInterval = CMTime(seconds: 2, preferredTimescale: 600)
         writer.initialMovieFragmentInterval = CMTime(seconds: 2, preferredTimescale: 600)
@@ -21,7 +34,7 @@ final class VideoWriter {
 
         let level = tenBit ? kVTProfileLevel_HEVC_Main10_AutoLevel : kVTProfileLevel_HEVC_Main_AutoLevel
         let compression: [String: Any] = [
-            AVVideoQualityKey: profile.videoQuality,
+            AVVideoQualityKey: quality ?? profile.videoQuality,
             AVVideoMaxKeyFrameIntervalDurationKey: profile.keyFrameInterval,
             AVVideoExpectedSourceFrameRateKey: fps,
             AVVideoProfileLevelKey: level as String,
@@ -63,6 +76,13 @@ final class VideoWriter {
         }
         dropped += 1
         return false
+    }
+
+    /// Version hors temps réel (banc d'essai de l'encodeur) : attend que l'encodeur soit prêt au lieu de perdre l'image.
+    func appendWaiting(_ sampleBuffer: CMSampleBuffer, timeout: TimeInterval = 10) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !input.isReadyForMoreMediaData && writer.status == .writing && Date() < deadline { usleep(500) }
+        return append(sampleBuffer)
     }
 
     var failure: String? { writer.status == .failed ? (writer.error?.localizedDescription ?? "échec") : nil }
