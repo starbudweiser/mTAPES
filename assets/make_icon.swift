@@ -1,4 +1,4 @@
-// Dessine l'icône de mTAPES (carré arrondi rose, cassette blanche) : swift make_icon.swift icon-1024.png
+// Dessine l'icône de mTAPES (carré arrondi sombre, cassette rose) : swift make_icon.swift icon-1024.png
 import AppKit
 
 let size: CGFloat = 1024
@@ -6,8 +6,8 @@ let out = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "icon-102
 let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
     // Carré arrondi (rayon 22,7 %) à dégradé diagonal.
     let body = NSBezierPath(roundedRect: rect.insetBy(dx: 40, dy: 40), xRadius: size * 0.227, yRadius: size * 0.227)
-    NSGradient(starting: NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1),
-               ending: NSColor(srgbRed: 0xe4 / 255, green: 0xe4 / 255, blue: 0xea / 255, alpha: 1))!.draw(in: body, angle: -45)
+    NSGradient(starting: NSColor(srgbRed: 0x3a / 255, green: 0x3a / 255, blue: 0x42 / 255, alpha: 1),
+               ending: NSColor(srgbRed: 0x17 / 255, green: 0x17 / 255, blue: 0x1a / 255, alpha: 1))!.draw(in: body, angle: -45)
     let rose = NSColor(srgbRed: 0xf4 / 255, green: 0x3f / 255, blue: 0x5e / 255, alpha: 1)
     // Cassette blanche : corps, fenêtre évidée, bobines.
     let glyph = NSRect(x: 232, y: 332, width: 560, height: 350)
@@ -18,7 +18,7 @@ let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { r
     rose.setFill()
     NSBezierPath(roundedRect: r(1, 1, 62, 38), xRadius: 5 * s, yRadius: 5 * s).fill()
     // Fenêtre et pied dans la couleur du fond (dégradé : on les peint par-dessus en rose moyen).
-    let hole = NSColor(srgbRed: 0xf6 / 255, green: 0xf6 / 255, blue: 0xf8 / 255, alpha: 1)
+    let hole = NSColor(srgbRed: 0x26 / 255, green: 0x26 / 255, blue: 0x2b / 255, alpha: 1)
     hole.setFill()
     NSBezierPath(roundedRect: r(9, 8, 46, 16), xRadius: 3 * s, yRadius: 3 * s).fill()
     let base = NSBezierPath()
