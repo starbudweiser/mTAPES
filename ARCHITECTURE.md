@@ -137,7 +137,7 @@ Cursor, Gemini CLI) ou commande à copier, depuis l'écran Pilotage IA.
 
 ## 9. Ergonomie : règles de conception
 
-1. **Enregistrer en trois clics au plus** : quoi filmer, quel style, Enregistrer (⌘⇧5). Tout le reste est automatique.
+1. **Enregistrer en trois clics au plus** : quoi filmer, quel style, Enregistrer (⌥⌘R). Tout le reste est automatique.
 2. **Deux modes, une seule appli.** Interrupteur « Simple | Avancé » en haut à droite de chaque fenêtre et dans Réglages ; le mode se change à tout moment sans perdre de prise.
 3. **Un seul appel principal par écran** (ambre) ; boutons de progression toujours à la même place ; chaque état (repos, en cours, terminé, erreur, vide) est dessiné.
 4. **L'interface dit vrai** : autorisations lues en direct, poids estimés avant export puis mesurés après, état du serveur MCP réel.
@@ -224,7 +224,7 @@ Parité à prévoir pour ne pas être distancée par les logiciels commerciaux (
 
 - **Scénarios scriptés et reproductibles** : écran calme, saisie de texte, défilement, vidéo en lecture, interface très animée.
 - **Mesures** : processeur et énergie, images perdues, débit, poids du fichier, délai de démarrage et d'arrêt, qualité par rapport à une référence sans perte (SSIM, PSNR, VMAF), poids d'un GIF au même score visuel.
-- **Comparaison** avec ⌘⇧5 / QuickTime, OBS, Cap, Kap, CleanShot X, Screen Studio et OpenTape, dans les mêmes conditions ; résultats publiés dans le README avec la méthode, et **seuls les chiffres mesurés** y figurent.
+- **Comparaison** avec ⌥⌘R / QuickTime, OBS, Cap, Kap, CleanShot X, Screen Studio et OpenTape, dans les mêmes conditions ; résultats publiés dans le README avec la méthode, et **seuls les chiffres mesurés** y figurent.
 - Le banc sert aussi de test de non-régression : une version qui dégrade poids, qualité ou images perdues ne passe pas.
 
 ## 15. Étapes révisées

@@ -10,7 +10,7 @@ mTAPES is made by Starbudweiser & Claude Code (Anthropic). Part of the **DESKTOP
 
 ## Status
 
-**Early development: only the recording engine exists so far** (command line, no app window yet). Design mockups of the planned app are in [`maquettes/index.html`](maquettes/index.html) (open it in a browser), the plan in [`ARCHITECTURE.md`](ARCHITECTURE.md) (French).
+**Early development.** The recording engine and a first menu-bar app (Simple mode: record the screen or a window, shortcut ⌥⌘R) exist; editing, export, AI and MCP are not built yet. The app needs macOS 15 or later. Design mockups of the planned app are in [`maquettes/index.html`](maquettes/index.html) (open it in a browser), the plan in [`ARCHITECTURE.md`](ARCHITECTURE.md) (French).
 
 ## Planned
 

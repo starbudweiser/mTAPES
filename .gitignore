@@ -4,3 +4,6 @@ dist/
 .DS_Store
 PASSATION_*.md
 ETAT.md
+maquettes/*.pdf
+mTAPES dev.app/
+mTAPES.app/
