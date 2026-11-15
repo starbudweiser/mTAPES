@@ -57,3 +57,21 @@ Référence ProRes 4444 des mêmes images (même flux ScreenCaptureKit) ; conten
 | Léger | 27 | 0,9869 | 39,3 dB | 0,37 Mo |
 | Équilibré | 35 | 0,9960 | 47,0 dB | 0,28 Mo |
 | Maximal (ancien réglage) | 7 | 0,9983 | 54,3 dB | 0,15 Mo |
+
+## Endurance : 30 minutes (15/11/2026)
+
+`mtapes bench --seconds 1800 --profile balanced`, écran principal 3440 × 1440, usage normal du poste pendant toute la mesure
+(navigation, compilations, notarisation, autres captures de 12 à 20 s en parallèle). Résultat brut : `bench/results/soak_30min_balanced.json`.
+
+| Mesure | Résultat |
+| --- | --- |
+| Durée enregistrée | 1799,98 s |
+| Images écrites / perdues | 44 861 / **0** (35 273 notifications « rien n'a changé » sans écriture) |
+| Poids | 325 Mo, soit **10,8 Mo/min** (1,45 Mb/s) |
+| Départ / arrêt | 0,10 s / 0,04 s |
+| Mémoire résidente (pic) | 49 Mo |
+| Processeur (service d'encodage + replayd) | 0,018 cœur |
+
+Limites : le binaire de l'essai s'appelait `mtapes-soak`, donc le processus `mtapes` lui-même n'est **pas** compté dans le processeur (il pesait ≈ 0,02 cœur
+sur les prises de 20 s : total attendu ≈ 0,04 cœur) ; WindowServer non mesuré ; la fidélité visuelle sur 30 minutes n'est pas mesurée (seulement le poids, les images
+perdues et la mémoire). La tenue, elle, est confirmée : aucune image perdue, aucune dérive mémoire (pic 49 Mo contre 43 Mo sur 20 s).
