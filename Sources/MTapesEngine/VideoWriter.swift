@@ -26,16 +26,16 @@ final class VideoWriter {
         }
     }
 
-    init(url: URL, width: Int, height: Int, profile: QualityProfile, fps: Int, tenBit: Bool, quality: Double? = nil) throws {
+    init(url: URL, width: Int, height: Int, profile: QualityProfile, fps: Int, tenBit: Bool, quality: Double? = nil, keyFrameInterval: Double? = nil) throws {
         writer = try AVAssetWriter(url: url, fileType: .mov)
-        writer.movieFragmentInterval = CMTime(seconds: 2, preferredTimescale: 600)
-        writer.initialMovieFragmentInterval = CMTime(seconds: 2, preferredTimescale: 600)
+        writer.movieFragmentInterval = CMTime(seconds: 1, preferredTimescale: 600)
+        writer.initialMovieFragmentInterval = CMTime(seconds: 1, preferredTimescale: 600)
         writer.shouldOptimizeForNetworkUse = false
 
         let level = tenBit ? kVTProfileLevel_HEVC_Main10_AutoLevel : kVTProfileLevel_HEVC_Main_AutoLevel
         let compression: [String: Any] = [
             AVVideoQualityKey: quality ?? profile.videoQuality,
-            AVVideoMaxKeyFrameIntervalDurationKey: profile.keyFrameInterval,
+            AVVideoMaxKeyFrameIntervalDurationKey: keyFrameInterval ?? profile.keyFrameInterval,
             AVVideoExpectedSourceFrameRateKey: fps,
             AVVideoProfileLevelKey: level as String,
         ]
@@ -84,6 +84,9 @@ final class VideoWriter {
         while !input.isReadyForMoreMediaData && writer.status == .writing && Date() < deadline { usleep(500) }
         return append(sampleBuffer)
     }
+
+    /// Abandonne l'écriture (départ raté, prise sans image).
+    func cancel() { if writer.status == .writing { writer.cancelWriting() } }
 
     var failure: String? { writer.status == .failed ? (writer.error?.localizedDescription ?? "échec") : nil }
 

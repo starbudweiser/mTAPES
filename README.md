@@ -10,7 +10,9 @@ mTAPES is made by Starbudweiser & Claude Code (Anthropic). Part of the **DESKTOP
 
 ## Status
 
-**Early development.** The recording engine and a first menu-bar app (Simple mode: record the screen or a window, shortcut ⌥⌘R) exist; editing, export, AI and MCP are not built yet. The app needs macOS 15 or later. Design mockups of the planned app are in [`maquettes/index.html`](maquettes/index.html) (open it in a browser), the plan in [`ARCHITECTURE.md`](ARCHITECTURE.md) (French).
+**Early preview (0.1.x).** Today mTAPES is a menu-bar app with a Simple mode that records the whole screen or one window (shortcut ⌥⌘R) and saves a `.tape` take in `~/Movies/mTAPES`,
+plus a command-line recording engine (`mtapes`). **Not built yet:** automatic editing, export, AI and MCP control, Advanced mode, audio, automatic updates. Requires **macOS 15 or later on Apple Silicon**
+and the Screen Recording permission. Design mockups: [`maquettes/index.html`](maquettes/index.html) (open it in a browser); plan: [`ARCHITECTURE.md`](ARCHITECTURE.md) (French).
 
 ## Planned
 
@@ -27,7 +29,8 @@ mTAPES is made by Starbudweiser & Claude Code (Anthropic). Part of the **DESKTOP
 
 - ScreenCaptureKit capture of a display, a window, an application or a zone; the cursor is not baked into the video.
 - Adaptive frame rate (only changed frames are written), hardware HEVC with constant quality, a key frame every second, fragmented file (a crash leaves a playable file).
-- Click, double-click and drag detection without any extra permission.
+- Click, double-click and drag detection from the button state (no extra permission; a press shorter than ~8 ms can be missed).
+- Crash-tolerant takes: the video is fragmented and events are saved every 5 s (verified with a forced kill).
 
 ```sh
 swift build -c release
@@ -37,7 +40,7 @@ swift build -c release
 .build/release/mtapes bench --seconds 20           # CPU, dropped frames, size, latency
 ```
 
-First measurements are in [`bench/RESULTS.md`](bench/RESULTS.md) (Apple M5 Max, 3440 × 1440: no dropped frame, about 10 MB per minute at the Balanced profile). They are early and incomplete (visual quality, long recordings and comparisons are not measured yet); only measured numbers will be published. Requires macOS 14 or later on Apple Silicon and the Screen Recording permission.
+First measurements are in [`bench/RESULTS.md`](bench/RESULTS.md) (Apple M5 Max, 3440 × 1440: no frame refused by the encoder over a 30-minute take, about 10 MB per minute at the Balanced profile, about 0.2 CPU core attributable to recording). They are early and incomplete (visual quality, long recordings and comparisons are not measured yet); only measured numbers will be published. Requires macOS 15 or later on Apple Silicon and the Screen Recording permission.
 
 ---
 

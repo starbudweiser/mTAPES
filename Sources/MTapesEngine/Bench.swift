@@ -12,7 +12,7 @@ public enum ResourceMeter {
         var systemTotalTicks: UInt64
     }
 
-    static let tracked = ["mtapes", "VTEncoderXPCService", "replayd", "WindowServer", "screencaptureui"]
+    static let tracked = ["mtapes", "mTAPES", "VTEncoderXPCService", "replayd", "WindowServer", "screencaptureui"]
 
     public static func snapshot() -> Snapshot {
         var cpu = [String: Double]()
@@ -36,6 +36,9 @@ public enum ResourceMeter {
             }
         }
 
+        // Processus que proc_pidinfo ne peut pas lire (WindowServer, propriété du système) : on passe par ps (précision 10 ms).
+        for (name, seconds) in psCPU() where cpu[name] == nil { cpu[name] = seconds }
+
         var load = host_cpu_load_info()
         var size = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size)
         let result = withUnsafeMutablePointer(to: &load) {
@@ -49,6 +52,30 @@ public enum ResourceMeter {
             busy = u + s + n; total = u + s + i + n
         }
         return Snapshot(wall: HostClock.now(), perProcess: cpu, systemBusyTicks: busy, systemTotalTicks: total)
+    }
+
+    /// Secondes de processeur cumulées par nom de processus suivi, lues par `ps -axo cputime=,comm=`.
+    static func psCPU() -> [String: Double] {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/ps")
+        process.arguments = ["-axo", "cputime=,comm="]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+        guard (try? process.run()) != nil else { return [:] }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        var out = [String: Double]()
+        for line in String(decoding: data, as: UTF8.self).split(separator: "\n") {
+            let parts = line.trimmingCharacters(in: .whitespaces).split(separator: " ", maxSplits: 1)
+            guard parts.count == 2 else { continue }
+            let name = (String(parts[1]) as NSString).lastPathComponent
+            guard tracked.contains(name) else { continue }
+            var seconds = 0.0
+            for field in parts[0].split(separator: ":") { seconds = seconds * 60 + (Double(field) ?? 0) }
+            out[name, default: 0] += seconds
+        }
+        return out
     }
 
     public static func peakResidentBytes() -> Int64 {
@@ -172,7 +199,7 @@ public struct EncoderBenchResult: Codable {
 }
 
 public enum EncoderBench {
-    public static func run(input: URL, output: URL, profile: QualityProfile, pixelFormat: PixelFormatChoice, quality: Double? = nil) async throws -> EncoderBenchResult {
+    public static func run(input: URL, output: URL, profile: QualityProfile, pixelFormat: PixelFormatChoice, quality: Double? = nil, keyFrameInterval: Double? = nil) async throws -> EncoderBenchResult {
         let asset = AVURLAsset(url: input)
         guard let track = try await asset.loadTracks(withMediaType: .video).first else { throw EngineError.noFrames }
         let size = try await track.load(.naturalSize)
@@ -186,7 +213,7 @@ public enum EncoderBench {
 
         try? FileManager.default.removeItem(at: output)
         let writer = try VideoWriter(url: output, width: Int(size.width), height: Int(size.height), profile: profile,
-                                     fps: profile.maxFPS, tenBit: pixelFormat.isTenBit, quality: quality)
+                                     fps: profile.maxFPS, tenBit: pixelFormat.isTenBit, quality: quality, keyFrameInterval: keyFrameInterval)
         let start = Date()
         var frames = 0
         var lastPTS = CMTime.zero

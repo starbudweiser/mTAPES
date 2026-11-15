@@ -4,7 +4,7 @@ Rédigée le 15/11/2026. Maquettes : `maquettes/index.html` (10 écrans, Socle s
 
 ## 1. Technologie
 
-- **Swift natif**, SwiftUI + AppKit, macOS 14 minimum (Mac de Stéphan : 27.2). Même chaîne que mBACKUP : `build_app.sh`,
+- **Swift natif**, SwiftUI + AppKit, macOS 15 minimum (Mac de développement : macOS 27.2). Même chaîne que mBACKUP : `build_app.sh`,
   `sign_app.sh`, `release.sh`, `Updater.swift`, `About.swift`, `L10n.swift`, `Socle.swift`.
 - **Capture : ScreenCaptureKit** (`SCStream`, `SCContentFilter`).
   - Écran : filtre sur un `SCDisplay`. Fenêtre : filtre sur une `SCWindow`, qui filme la fenêtre **même masquée** par d'autres.
@@ -153,15 +153,15 @@ Objectif : une qualité visuelle maximale pour un fichier le plus léger possibl
 
 ### Chaîne de capture
 - **ScreenCaptureKit** : `SCStream` sur filtre écran, fenêtre, application ou zone (`sourceRect`), curseur absent de l'image (`showsCursor = false`), résolution native, format de pixel 4:2:0 (10 bits quand disponible) pour éviter une conversion couleur coûteuse, file de tampons de 5 à 8 images.
-- **Images adaptatives (VFR)** : ScreenCaptureKit ne livre une image que si le contenu a changé ; le moteur écrit les horodatages réels et **ne duplique jamais une image**. Un écran calme coûte presque zéro octet ; un écran animé reçoit tout le débit.
-- **Zéro copie** : tampon IOSurface de SCK → `VTCompressionSession` matériel (HEVC, moteur média d'Apple Silicon) → échantillons compressés écrits tels quels (`AVAssetWriter` sans ré-encodage). Pas de passage par le processeur ni par la mémoire principale.
+- **Images adaptatives (VFR)** : ScreenCaptureKit ne livre une image que si le contenu a changé ; le moteur écrit les horodatages réels et **ne duplique jamais une image**. Un écran strictement figé ne coûte rien ; un écran qui change au moins une fois par seconde coûte au moins une image clé par seconde de changement (≈ 160 Ko à 3440 × 1440 avant le passage à 2 s), c'est pourquoi le poids suit l'activité plus que la durée.
+- **Encodage matériel** : tampon IOSurface de SCK → `AVAssetWriter` (VideoToolbox, moteur média d'Apple Silicon, HEVC), écrit directement en `.mov`. Une `VTCompressionSession` pilotée à la main (vrai « zéro copie » contrôlé) reste une piste, à n'ouvrir que si les mesures l'exigent.
 - **Files d'attente dédiées**, priorité temps réel, **aucun travail d'interface dans le chemin de capture** ; contre-pression comptée (images perdues, retard d'encodeur) et affichée dans le diagnostic.
-- **Fichier fragmenté** (fragment de 2 s) : une panne de courant ou un plantage laisse un brut lisible ; récupération proposée au prochain lancement.
-- **Image clé chaque seconde** (et aux changements de scène) : défilement et aperçu fluides dans la finition sans recalcul.
+- **Fichier fragmenté** (fragment de 1 s) : vérifié par un plantage forcé (`kill -9` à ~10 s) : le brut est lisible (10 s récupérées), `meta.json` (état `recording`), `events.jsonl` et `pointer.bin` sont réécrits toutes les 5 s. À l'arrêt normal, l'état passe à `complete`.
+- **Image clé toutes les 2 s** (mesuré : 1 s coûte +34 % de poids pour la même qualité, 4 s fait −51 % mais retarde la reprise après plantage) : défilement et aperçu fluides dans la finition, le décodage matériel d'au plus 2 s d'images intermédiaires étant instantané.
 - **Qualité constante** (`kVTCompressionPropertyKey_Quality`, confirmée sur le matériel : 0,50 Léger, 0,65 Équilibré, 0,75 Maximal, réglages tirés d'un balayage mesuré, voir `bench/RESULTS.md`), repli sur un débit moyen contraint ; profil « Léger / Équilibré / Maximal / Sur mesure » réglé en un clic.
-- **Son** : micro (`captureMicrophone`, macOS 15+) et son du Mac par SCK, AAC, pistes séparées.
-- **Suivi de fenêtre** : `WindowTracker` suit déplacement, redimensionnement et changement d'écran ; recadrage sans coupure dans le brut.
-- **Événements à part** : clics, clavier et trajectoire du pointeur (120 Hz) dans `events.jsonl` et `pointer.bin`, hors de l'image.
+- **Son** *(prévu, non implémenté)* : micro (`captureMicrophone`, macOS 15+) et son du Mac par SCK, AAC, pistes séparées.
+- **Suivi de fenêtre** *(prévu, non implémenté)* : `WindowTracker` suit déplacement, redimensionnement et changement d'écran ; aujourd'hui la taille et le cadre sont figés au départ.
+- **Événements à part** : clics (état des boutons lu à 120 Hz, sans autorisation ; un appui de moins de ≈ 8 ms peut être manqué, à mesurer) et trajectoire du pointeur dans `events.jsonl` et `pointer.bin`, hors de l'image ; clavier non enregistré pour l'instant.
 
 ### Pourquoi le résultat est net et léger
 - **Curseur redessiné** à la finition en vectoriel : toujours net, même à 2× de zoom, indépendant des images/s de la vidéo.
@@ -170,16 +170,21 @@ Objectif : une qualité visuelle maximale pour un fichier le plus léger possibl
 - **Export léger** : encodeurs matériels (H.264, HEVC), suppression des images dupliquées, accélération des temps morts, cible de taille résolue par **sondage sur échantillons** (on ajuste débit, échelle et cadence jusqu'à tenir sous la limite) ; contrôle SSIM sur images témoins pour ne pas dégrader sous un seuil.
 - **GIF léger** : encodeur maison (palette adaptative par plan, tramage à bruit bleu, images différentielles avec transparence, compression LZW optimisée), repli WebP animé ; objectif d'un GIF de démonstration de README sous 10 Mo.
 
-### Objectifs à tenir (mesurés sur Apple Silicon, écran 2560 × 1600)
+### Objectifs à tenir (mesurés sur Apple Silicon ; mesures réelles dans `bench/RESULTS.md`)
 | Mesure | Objectif |
 | --- | --- |
-| Processeur pendant une prise, interface calme | < 5 % d'un cœur performant |
+| Processeur attribuable à la prise (mtapes + encodage + replayd + surcoût de WindowServer) | ≈ 0,2 cœur mesuré (≈ 1 % de la machine) ; objectif revu à < 0,25 cœur |
 | Images perdues sur une prise de 30 minutes | 0 |
 | Délai entre Enregistrer et la première image | < 0,5 s |
 | Délai entre Arrêter et l'aperçu de finition | < 1,5 s |
 | Poids du brut, profil Équilibré, interface calme | de l'ordre de 10 à 15 Mo par minute |
 | Mémoire résidente pendant une prise | < 400 Mo |
 | GIF de 60 s pour un README | < 10 Mo, qualité visuelle contrôlée |
+
+### État réel du moteur au 16/11/2026
+Implémenté et mesuré : capture écran, fenêtre, application, zone (validée) ; images adaptatives ; HEVC matériel à qualité constante ; couleur forcée en sRGB ; image clé 2 s ; fichier fragmenté et sauvegarde périodique ;
+détection d'un flux coupé ou silencieux (6 s) et d'un échec d'écriture, signalés à l'appli ; refus de démarrer sous 2 Go libres ; nettoyage du dossier en cas d'échec ; clics et trajectoire sans autorisation.
+**Pas encore** : son, suivi de fenêtre redimensionnée ou déplacée, changement de résolution ou d'écran en cours de prise, veille et verrouillage, clavier, fidélité de la synchronisation clics/vidéo mesurée, HDR/P3 (tout est converti en sRGB).
 
 ## 11. Modes et assistant de configuration
 

@@ -24,7 +24,7 @@ struct Args {
 
     init(_ raw: [String]) {
         var i = 0
-        let valued: Set<String> = ["input", "q", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
+        let valued: Set<String> = ["input", "q", "kfi", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
         while i < raw.count {
             let a = raw[i]
             if a.hasPrefix("--") {
@@ -55,6 +55,7 @@ struct Args {
             o.profile = profile
         }
         if let f = options["fps"] { o.maxFPS = Int(f) }
+        if let k = options["kfi"] { o.keyFrameInterval = Double(k) }
         if let px = options["pixel"] {
             guard let choice = PixelFormatChoice(rawValue: px) else { fail("--pixel : 420v, x420 ou BGRA") }
             o.pixelFormat = choice
@@ -120,7 +121,7 @@ func run() async {
         do {
             let out = URL(fileURLWithPath: NSTemporaryDirectory() + "mtapes-enc-\(getpid()).mov")
             let opts = rest.captureOptions()
-            let result = try await EncoderBench.run(input: URL(fileURLWithPath: input), output: out, profile: opts.profile, pixelFormat: opts.pixelFormat, quality: rest.options["q"].flatMap { Double($0) })
+            let result = try await EncoderBench.run(input: URL(fileURLWithPath: input), output: out, profile: opts.profile, pixelFormat: opts.pixelFormat, quality: rest.options["q"].flatMap { Double($0) }, keyFrameInterval: rest.options["kfi"].flatMap { Double($0) })
             printJSON(result)
             printJSON(try QualityCheck.measure(raw: out, reference: URL(fileURLWithPath: input)))
             try? FileManager.default.removeItem(at: out)

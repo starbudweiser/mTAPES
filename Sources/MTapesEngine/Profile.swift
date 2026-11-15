@@ -24,7 +24,7 @@ public enum QualityProfile: String, Codable, CaseIterable {
     }
 
     /// Image clé au plus toutes les N secondes (aperçu et défilement fluides dans la finition).
-    public var keyFrameInterval: Double { 1.0 }
+    public var keyFrameInterval: Double { 2.0 }
 }
 
 /// Format de pixel demandé à ScreenCaptureKit.
@@ -58,6 +58,7 @@ public enum EngineError: Error, CustomStringConvertible {
     case writerFailed(String)
     case noFrames
     case alreadyStopped
+    case diskLow
 
     public var description: String {
         switch self {
@@ -67,6 +68,7 @@ public enum EngineError: Error, CustomStringConvertible {
         case .writerFailed(let why): return "Écriture vidéo impossible : \(why)"
         case .noFrames: return "Aucune image reçue : l'écran n'a pas été capturé."
         case .alreadyStopped: return "La prise est déjà arrêtée."
+        case .diskLow: return "Il reste moins de 2 Go sur le disque : libérez de l'espace avant d'enregistrer."
         }
     }
 }

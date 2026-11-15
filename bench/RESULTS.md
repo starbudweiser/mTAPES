@@ -8,7 +8,7 @@ Résultats bruts : `bench/results/*.json`.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Léger · 8 bits (420v) | 375 / 0 | 6,3 Mo/min | 0,84 Mb/s | 89 ms | 46 ms | 0,044 | 43 Mo |
 | **Équilibré · 8 bits (420v)** | 505 / 0 | **10,3 Mo/min** | 1,38 Mb/s | 101 ms | 70 ms | 0,047 | 43 Mo |
-| Maximal · 8 bits (420v) | 975 / 0 | 20,6 Mo/min | 2,75 Mb/s | 116 ms | 36 ms | 0,058 | 44 Mo |
+| Maximal · 8 bits (420v, **q 0,85 : ancien réglage**, abandonné) | 975 / 0 | 20,6 Mo/min | 2,75 Mb/s | 116 ms | 36 ms | 0,058 | 44 Mo |
 | Équilibré · 10 bits (x420) | 505 / 0 | 14,0 Mo/min | 1,87 Mb/s | 106 ms | 67 ms | 0,053 | 43 Mo |
 
 ## Lecture
@@ -75,3 +75,16 @@ Référence ProRes 4444 des mêmes images (même flux ScreenCaptureKit) ; conten
 Limites : le binaire de l'essai s'appelait `mtapes-soak`, donc le processus `mtapes` lui-même n'est **pas** compté dans le processeur (il pesait ≈ 0,02 cœur
 sur les prises de 20 s : total attendu ≈ 0,04 cœur) ; WindowServer non mesuré ; la fidélité visuelle sur 30 minutes n'est pas mesurée (seulement le poids, les images
 perdues et la mémoire). La tenue, elle, est confirmée : aucune image perdue, aucune dérive mémoire (pic 49 Mo contre 43 Mo sur 20 s).
+
+## Corrections après la revue du 16/11/2026
+
+- **Coût processeur** : le « ≈ 0,05 cœur » du premier tableau excluait WindowServer (alors présenté comme « inaccessible »). Relevé avec `ps` : WindowServer consomme ≈ 0,19 cœur sans prise
+  et ≈ 0,34 cœur pendant une prise de 20 s, soit ≈ **+0,15 cœur** attribuable à la capture ; avec mtapes (0,03), le service d'encodage (0,02) et replayd (0,01), le coût total attribuable est
+  **≈ 0,2 cœur, soit ≈ 1 % de cette machine à 18 cœurs**. L'objectif d'architecture « < 5 % d'un cœur » n'est donc pas tenu ; il est revu à « < 0,25 cœur ».
+- **Poids** : les écarts entre profils du premier tableau mêlent qualité et contenu (chaque prise filmait un écran différent) ; seule la comparaison `encode-bench` sur la même séquence est valable.
+  Le plancher de poids vient surtout des images clés : mesuré sur la séquence synthétique, passer de 1 s à **2 s** d'intervalle fait −34 % (2,84 → 1,87 Mo), 4 s −51 %, 8 s −59 %, à SSIM identique (0,9977) ;
+  **2 s est le nouveau défaut**.
+- **« 0 image perdue »** ne compte que les refus de l'encodeur (`framesDropped`). Les images que ScreenCaptureKit lui-même abandonnerait ne sont pas détectées : à instrumenter.
+  Une première prise d'un binaire fraîchement signé a perdu 22 images sur 61 (non reproduit ensuite, ni avec l'encodeur froid) : à surveiller.
+- **Mémoire** : les 43-49 Mo mesurés sont le pic du processus ; une partie est faite de tampons IOSurface de la capture.
+- **Plantage** : vérifié (kill -9 à ~10 s) : brut lisible (10 s), événements, trajectoire et métadonnées présents.

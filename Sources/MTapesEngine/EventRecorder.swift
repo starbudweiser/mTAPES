@@ -43,6 +43,13 @@ public final class EventRecorder {
         events.append(contentsOf: detector.feed(.init(t: t, x: Double(location.x), y: Double(location.y), left: left, right: right)))
     }
 
+    /// Copie de l'état courant sans arrêter l'échantillonnage (sauvegarde périodique).
+    public func snapshot() -> (events: [TapeEvent], samples: [(t: Double, x: Double, y: Double)]) {
+        var result: (events: [TapeEvent], samples: [(t: Double, x: Double, y: Double)]) = ([], [])
+        queue.sync { result = (self.events, self.samples) }
+        return result
+    }
+
     /// Arrête l'échantillonnage ; les temps sont en secondes de l'horloge hôte (à rebaser sur la première image).
     public func stop() -> (events: [TapeEvent], samples: [(t: Double, x: Double, y: Double)]) {
         timer?.cancel()

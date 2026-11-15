@@ -47,6 +47,18 @@ enum L {
         "about.collection": "Fait partie du",
         "about.authors": "Starbudweiser & Claude Code (Anthropic)", "about.license": "Licence MIT. © 2026 Starbudweiser.",
         "about.disclaimer": "Fourni en l'état, sans garantie.",
+        "take.name": "Prise", "unit.mb": "Mo", "start.title": "Démarrage…",
+        "menu.last": "Dernière prise : %@ · %@",
+        "err.denied": "mTAPES n'a pas l'autorisation de filmer l'écran. Accordez-la dans Réglages Système > Confidentialité et sécurité > Enregistrement de l'écran, puis réessayez.",
+        "err.notFound": "La fenêtre ou l'écran choisi n'existe plus. Actualisez la liste, choisissez de nouveau, puis réessayez.",
+        "err.window.none": "Aucune fenêtre n'est choisie. Ouvrez la fenêtre à filmer, appuyez sur Actualiser et choisissez-la.",
+        "err.noFrames": "Aucune image n'a été reçue : la prise est vide. Vérifiez que l'écran ou la fenêtre est visible, puis réessayez.",
+        "err.write": "Le fichier vidéo n'a pas pu être écrit. Vérifiez l'espace libre du disque, puis réessayez.",
+        "err.disk": "Il reste moins de 2 Go sur le disque. Libérez de l'espace, puis réessayez.",
+        "err.generic": "L'enregistrement a échoué. Réessayez ; si le problème continue, quittez puis relancez mTAPES.",
+        "problem.stopped": "Le système a interrompu la capture. Arrêtez la prise : ce qui a été filmé est conservé.",
+        "problem.silent": "Plus aucune image n'arrive depuis quelques secondes (fenêtre réduite, écran verrouillé ?). Rétablissez-la ou arrêtez la prise.",
+        "problem.write": "Le fichier vidéo ne s'écrit plus. Arrêtez la prise et vérifiez l'espace libre du disque.",
     ]
 
     private static let en: [String: String] = [
@@ -76,6 +88,18 @@ enum L {
         "about.collection": "Part of the",
         "about.authors": "Starbudweiser & Claude Code (Anthropic)", "about.license": "MIT License. © 2026 Starbudweiser.",
         "about.disclaimer": "Provided as is, without warranty.",
+        "take.name": "Take", "unit.mb": "MB", "start.title": "Starting…",
+        "menu.last": "Last take: %@ · %@",
+        "err.denied": "mTAPES is not allowed to film the screen. Allow it in System Settings > Privacy & Security > Screen Recording, then try again.",
+        "err.notFound": "The chosen window or screen no longer exists. Refresh the list, choose again, then try again.",
+        "err.window.none": "No window is chosen. Open the window to film, press Refresh and choose it.",
+        "err.noFrames": "No frame was received: the take is empty. Make sure the screen or window is visible, then try again.",
+        "err.write": "The video file could not be written. Check the free space on the disk, then try again.",
+        "err.disk": "Less than 2 GB is left on the disk. Free some space, then try again.",
+        "err.generic": "Recording failed. Try again; if the problem continues, quit and relaunch mTAPES.",
+        "problem.stopped": "The system interrupted the capture. Stop the take: what was filmed is kept.",
+        "problem.silent": "No frame has arrived for a few seconds (window minimized, screen locked?). Bring it back or stop the take.",
+        "problem.write": "The video file is no longer being written. Stop the take and check the free space on the disk.",
     ]
 
     private static let es: [String: String] = [
@@ -105,6 +129,18 @@ enum L {
         "about.collection": "Forma parte del",
         "about.authors": "Starbudweiser & Claude Code (Anthropic)", "about.license": "Licencia MIT. © 2026 Starbudweiser.",
         "about.disclaimer": "Se ofrece tal cual, sin garantía.",
+        "take.name": "Toma", "unit.mb": "MB", "start.title": "Iniciando…",
+        "menu.last": "Última toma: %@ · %@",
+        "err.denied": "mTAPES no tiene permiso para grabar la pantalla. Concédelo en Ajustes del Sistema > Privacidad y seguridad > Grabación de pantalla y vuelve a intentarlo.",
+        "err.notFound": "La ventana o pantalla elegida ya no existe. Actualiza la lista, elige de nuevo y vuelve a intentarlo.",
+        "err.window.none": "No hay ninguna ventana elegida. Abre la ventana que quieres grabar, pulsa Actualizar y elígela.",
+        "err.noFrames": "No se ha recibido ninguna imagen: la toma está vacía. Comprueba que la pantalla o la ventana es visible y vuelve a intentarlo.",
+        "err.write": "No se ha podido escribir el archivo de vídeo. Comprueba el espacio libre del disco y vuelve a intentarlo.",
+        "err.disk": "Quedan menos de 2 GB en el disco. Libera espacio y vuelve a intentarlo.",
+        "err.generic": "La grabación ha fallado. Vuelve a intentarlo; si el problema continúa, cierra y reabre mTAPES.",
+        "problem.stopped": "El sistema ha interrumpido la captura. Para la toma: lo grabado se conserva.",
+        "problem.silent": "Hace unos segundos que no llega ninguna imagen (¿ventana minimizada, pantalla bloqueada?). Restáurala o para la toma.",
+        "problem.write": "El archivo de vídeo ya no se escribe. Para la toma y comprueba el espacio libre del disco.",
     ]
 
     private static let it: [String: String] = [
@@ -134,5 +170,17 @@ enum L {
         "about.collection": "Fa parte del",
         "about.authors": "Starbudweiser & Claude Code (Anthropic)", "about.license": "Licenza MIT. © 2026 Starbudweiser.",
         "about.disclaimer": "Fornito così com'è, senza garanzie.",
+        "take.name": "Ripresa", "unit.mb": "MB", "start.title": "Avvio…",
+        "menu.last": "Ultima ripresa: %@ · %@",
+        "err.denied": "mTAPES non ha l'autorizzazione per registrare lo schermo. Concedila in Impostazioni di Sistema > Privacy e sicurezza > Registrazione schermo, poi riprova.",
+        "err.notFound": "La finestra o lo schermo scelto non esiste più. Aggiorna l'elenco, scegli di nuovo, poi riprova.",
+        "err.window.none": "Nessuna finestra scelta. Apri la finestra da riprendere, premi Aggiorna e sceglila.",
+        "err.noFrames": "Nessuna immagine ricevuta: la ripresa è vuota. Verifica che lo schermo o la finestra sia visibile, poi riprova.",
+        "err.write": "Impossibile scrivere il file video. Controlla lo spazio libero sul disco, poi riprova.",
+        "err.disk": "Sul disco restano meno di 2 GB. Libera spazio, poi riprova.",
+        "err.generic": "Registrazione non riuscita. Riprova; se il problema continua, esci e riavvia mTAPES.",
+        "problem.stopped": "Il sistema ha interrotto la cattura. Ferma la ripresa: quanto registrato viene conservato.",
+        "problem.silent": "Da alcuni secondi non arriva nessuna immagine (finestra ridotta, schermo bloccato?). Ripristinala o ferma la ripresa.",
+        "problem.write": "Il file video non viene più scritto. Ferma la ripresa e controlla lo spazio libero sul disco.",
     ]
 }

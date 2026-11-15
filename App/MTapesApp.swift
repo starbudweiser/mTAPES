@@ -13,13 +13,17 @@ struct MTapesApp: App {
         Window("mTAPES", id: "main") {
             SimpleView(model: model)
                 .task { await model.refreshWindows() }
+                .onAppear { model.markSeen() }
         }
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(CommandLine.arguments.contains("--show") ? .presented : .suppressed)
 
         MenuBarExtra {
             Button(model.phase == .recording ? L.t("menu.stop") : L.t("menu.record")) { model.toggle() }
-                .disabled(model.phase == .finishing)
+                .disabled(model.phase == .finishing || (model.phase != .recording && !model.canRecord))
+            if let last = model.lastSummary, !model.isBusy {
+                Text(L.t("menu.last", AppModel.clock(last.seconds), AppModel.megabytes(last.bytes)))
+            }
             Button(L.t("menu.open")) { openWindow(id: "main"); NSApp.activate() }
             Divider()
             Button(L.t("menu.about")) { About.show() }
@@ -37,6 +41,9 @@ struct MenuBarLabel: View {
             Image(nsImage: Cassette.menuBarImage())
             if model.phase == .recording {
                 Text(AppModel.clock(model.elapsed)).monospacedDigit().foregroundStyle(.red)
+            } else if model.unseen {
+                // Résultat ou erreur arrivé sans fenêtre ouverte (prise lancée au raccourci) : pastille, sans rien ouvrir.
+                if case .failed = model.phase { Text("!").bold().foregroundStyle(.orange) } else { Text("✓").bold().foregroundStyle(.green) }
             }
         }
     }
@@ -78,6 +85,13 @@ enum Cassette {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Quitter pendant une prise : on termine d'abord la prise (le .tape reste valide), puis on ferme.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard AppModel.shared.isBusy else { return .terminateNow }
+        AppModel.shared.finishThenQuit { NSApp.reply(toApplicationShouldTerminate: true) }
+        return .terminateLater
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         let args = CommandLine.arguments
         if let i = args.firstIndex(of: "--lang"), i + 1 < args.count { L.override = args[i + 1] }
@@ -104,7 +118,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "recording": model.phase = .recording; model.elapsed = 42
         case "done":
             model.phase = .done(.init(url: URL(fileURLWithPath: NSHomeDirectory() + "/Movies/mTAPES/Prise 2026-11-15 10.42.00.tape"), seconds: 72, bytes: 14_300_000, frames: 1860, dropped: 0))
-        case "failed": model.phase = .failed(EngineError.screenRecordingDenied.description)
+        case "failed": model.phase = .failed(AppModel.explain(EngineError.screenRecordingDenied))
+        case "problem": model.phase = .recording; model.elapsed = 95; model.problem = AppModel.describe(.noFrames)
         case "perm": model.screenAllowed = false
         default: break
         }

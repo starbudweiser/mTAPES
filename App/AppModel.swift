@@ -15,7 +15,9 @@ final class AppModel: ObservableObject {
     }
 
     enum Phase: Equatable {
-        case idle, recording, finishing
+        case idle
+        case starting          // entre le clic et la première image : aucun second départ possible
+        case recording, finishing
         case done(TapeSummary)
         case failed(String)
     }
@@ -28,15 +30,24 @@ final class AppModel: ObservableObject {
     @Published var selectedWindow: UInt32?
     @Published var elapsed: TimeInterval = 0
     @Published var screenAllowed = Permissions.screenRecording
+    /// Problème signalé par le moteur pendant la prise (flux coupé, plus d'images) ; texte déjà traduit.
+    @Published var problem: String?
+    /// Un résultat (ou une erreur) est arrivé pendant que la fenêtre n'était pas à l'écran : l'icône de la barre de menus le signale.
+    @Published var unseen: Bool = false
+    @Published var lastSummary: TapeSummary?
 
     private var session: RecordingSession?
     private var ticker: Timer?
     private var startedAt = Date()
+    private var stopWhenStarted = false
 
     static let outputDirectory = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Movies/mTAPES", isDirectory: true)
     static let shortcutLabel = "⌥⌘R"
 
-    var isBusy: Bool { phase == .recording || phase == .finishing }
+    var isBusy: Bool { phase == .starting || phase == .recording || phase == .finishing }
+
+    /// « Une fenêtre » sans fenêtre choisie : on ne filme jamais l'écran entier à la place.
+    var canRecord: Bool { !(kind == .window && selectedWindow == nil) }
 
     var recordingLabel: String {
         if kind == .window, let w = windows.first(where: { $0.id == selectedWindow }) {
@@ -57,9 +68,11 @@ final class AppModel: ObservableObject {
 
     // MARK: Prise
 
+    /// Raccourci et menu : démarre ou arrête. Pendant le départ, un second appui demande l'arrêt dès que la prise existe.
     func toggle() {
         switch phase {
         case .recording: stop()
+        case .starting: stopWhenStarted = true
         case .finishing: break
         default: start()
         }
@@ -67,27 +80,38 @@ final class AppModel: ObservableObject {
 
     func start() {
         guard !isBusy else { return }
+        guard canRecord else {
+            phase = .failed(L.t("err.window.none"))
+            return
+        }
         screenAllowed = Permissions.screenRecording
-        Task {
+        problem = nil
+        stopWhenStarted = false
+        phase = .starting                              // posé avant toute attente : un second déclenchement est ignoré
+        Task { [weak self] in
+            guard let self else { return }
             do {
                 var options = CaptureOptions()
                 let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH.mm.ss"
-                options.name = "Prise \(f.string(from: Date()))"
+                options.name = "\(L.t("take.name")) \(f.string(from: Date()))"
                 options.origin = "manual"
                 let target: CaptureTarget = (kind == .window && selectedWindow != nil) ? .window(id: selectedWindow!) : .display(index: nil)
                 let s = try await Recorder.start(target: target, options: options, outputDirectory: Self.outputDirectory)
+                s.onProblem = { [weak self] p in Task { @MainActor in self?.problem = Self.describe(p) } }
                 session = s
                 startedAt = Date(); elapsed = 0
                 phase = .recording
+                ticker?.invalidate()
                 ticker = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
                     Task { @MainActor in
                         guard let self else { return }
                         self.elapsed = Date().timeIntervalSince(self.startedAt)
                     }
                 }
+                if stopWhenStarted { stop() }
             } catch {
                 screenAllowed = Permissions.screenRecording
-                phase = .failed("\(error)")
+                fail(error)
             }
         }
     }
@@ -96,19 +120,67 @@ final class AppModel: ObservableObject {
         guard phase == .recording, let s = session else { return }
         ticker?.invalidate(); ticker = nil
         phase = .finishing
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
                 let (package, meta) = try await s.stop()
-                phase = .done(TapeSummary(url: package.url, seconds: meta.durationSeconds, bytes: meta.stats.bytes,
-                                          frames: meta.stats.framesWritten, dropped: meta.stats.framesDropped))
+                let summary = TapeSummary(url: package.url, seconds: meta.durationSeconds, bytes: meta.stats.bytes,
+                                          frames: meta.stats.framesWritten, dropped: meta.stats.framesDropped)
+                lastSummary = summary
+                unseen = true
+                phase = .done(summary)
             } catch {
-                phase = .failed("\(error)")
+                fail(error)
             }
             session = nil
         }
     }
 
+    /// Quitter pendant une prise : on termine proprement la prise avant de fermer (appelé par applicationShouldTerminate).
+    func finishThenQuit(_ done: @escaping @MainActor () -> Void) {
+        Task { [weak self] in
+            guard let self else { return }
+            if phase == .starting { stopWhenStarted = true }
+            var waited = 0
+            while phase == .starting && waited < 100 { try? await Task.sleep(nanoseconds: 100_000_000); waited += 1 }
+            if phase == .recording { stop() }
+            waited = 0
+            while phase == .finishing && waited < 300 { try? await Task.sleep(nanoseconds: 100_000_000); waited += 1 }
+            done()
+        }
+    }
+
     func reset() { phase = .idle }
+    func markSeen() { unseen = false }
+
+    private func fail(_ error: Error) {
+        phase = .failed(Self.explain(error))
+        unseen = true
+    }
+
+    // MARK: Textes d'erreur (traduits, « ce qui s'est passé et comment s'en sortir »)
+
+    static func explain(_ error: Error) -> String {
+        if let e = error as? EngineError {
+            switch e {
+            case .screenRecordingDenied: return L.t("err.denied")
+            case .targetNotFound: return L.t("err.notFound")
+            case .noFrames: return L.t("err.noFrames")
+            case .writerFailed: return L.t("err.write")
+            case .diskLow: return L.t("err.disk")
+            case .alreadyStopped: return L.t("err.generic")
+            }
+        }
+        return L.t("err.generic")
+    }
+
+    static func describe(_ p: RecordingSession.Problem) -> String {
+        switch p {
+        case .streamStopped: return L.t("problem.stopped")
+        case .noFrames: return L.t("problem.silent")
+        case .writerFailed: return L.t("problem.write")
+        }
+    }
 
     // MARK: Formats
 
@@ -119,7 +191,8 @@ final class AppModel: ObservableObject {
 
     static func megabytes(_ bytes: Int64) -> String {
         let mb = Double(bytes) / 1_000_000
-        return String(format: mb < 10 ? "%.1f Mo" : "%.0f Mo", locale: L.locale, mb).replacingOccurrences(of: "Mo", with: L.lang == "fr" ? "Mo" : "MB")
+        let number = String(format: mb < 10 ? "%.1f" : "%.0f", locale: L.locale, mb)
+        return number + " " + L.t("unit.mb")
     }
 
     // MARK: Essais sans fenêtre

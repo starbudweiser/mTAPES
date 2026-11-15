@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "mTAPES",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS("15.0")],
     products: [
         .library(name: "MTapesEngine", targets: ["MTapesEngine"]),
         .executable(name: "mtapes", targets: ["mtapes"]),

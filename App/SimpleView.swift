@@ -12,6 +12,7 @@ struct SimpleView: View {
         }
         .frame(width: 560)
         .fixedSize(horizontal: false, vertical: true)
+        .background(WindowCenterer())
     }
 
     private var content: some View {
@@ -19,6 +20,7 @@ struct SimpleView: View {
             header
             switch model.phase {
             case .idle: IdleBody(model: model)
+            case .starting: StartingBody()
             case .recording: RecordingBody(model: model)
             case .finishing: FinishingBody()
             case .done(let s): DoneBody(model: model, summary: s)
@@ -48,6 +50,7 @@ private struct BigTile: View {
     var body: some View {
         VStack(spacing: Socle.M.space2) {
             Image(systemName: symbol).font(.system(size: 24, weight: .regular)).foregroundStyle(selected ? Socle.C.textStrong : Socle.C.textMuted)
+                .accessibilityHidden(true)
             Text(title).socle(Socle.T.label).foregroundStyle(selected ? Socle.C.textStrong : Socle.C.text)
                 .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
             if let subtitle {
@@ -61,6 +64,8 @@ private struct BigTile: View {
         .overlay(RoundedRectangle(cornerRadius: Socle.M.radius).stroke(selected ? Socle.C.accent : .clear, lineWidth: 1))
         .opacity(disabled ? Socle.M.opacityDisabled : 1)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -105,8 +110,10 @@ private struct IdleBody: View {
                     }
                 }
                 .buttonStyle(SocleButtonStyle(.action, height: Socle.M.sizeCta))
+                .disabled(!model.canRecord)
+                .accessibilityLabel(L.t("btn.record"))
                 .frame(maxWidth: 320)
-                Text(L.t("hint.record", AppModel.shortcutLabel)).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle)
+                Text(branded: L.t("hint.record", AppModel.shortcutLabel)).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle)
                     .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity)
@@ -129,6 +136,7 @@ private struct IdleBody: View {
                     }
                 }
                 .labelsHidden()
+                .accessibilityLabel(L.t("target.window.pick"))
                 .frame(maxWidth: .infinity)
             }
         }
@@ -141,15 +149,16 @@ private struct IdleBody: View {
     private var permission: some View {
         VStack(alignment: .leading, spacing: Socle.M.space3) {
             Text(L.t("perm.title")).socle(Socle.T.title).foregroundStyle(Socle.C.warning)
-            Text(L.t("perm.body")).socle(Socle.T.body).foregroundStyle(Socle.C.text).fixedSize(horizontal: false, vertical: true)
+            Text(branded: L.t("perm.body")).socle(Socle.T.body).foregroundStyle(Socle.C.text).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: Socle.M.space2) {
                 Button(L.t("btn.perm.open")) {
                     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
                 }.buttonStyle(SocleButtonStyle(.primary)).fixedSize()
                 Button(L.t("btn.perm.recheck")) { Task { await model.refreshWindows() } }.buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
             }
+            .frame(maxWidth: .infinity)
         }
-        .padding(Socle.M.space4)
+        .padding(Socle.M.space6)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Socle.C.warningBg, in: RoundedRectangle(cornerRadius: Socle.M.radius))
         .overlay(RoundedRectangle(cornerRadius: Socle.M.radius).stroke(Socle.C.warningBorder, lineWidth: 1))
@@ -167,6 +176,12 @@ private struct RecordingBody: View {
             }
             Text(AppModel.clock(model.elapsed)).font(.system(size: 56, weight: .bold)).monospacedDigit().foregroundStyle(Socle.C.textStrong)
             Text(model.recordingLabel).socle(Socle.T.body).foregroundStyle(Socle.C.textMuted).multilineTextAlignment(.center)
+            if let problem = model.problem {
+                Text(problem).socle(Socle.T.body).foregroundStyle(Socle.C.warning)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    .padding(Socle.M.space3).frame(maxWidth: .infinity)
+                    .background(Socle.C.warningBg, in: RoundedRectangle(cornerRadius: Socle.M.radius))
+            }
             Button { model.stop() } label: {
                 HStack(spacing: Socle.M.space2) {
                     Image(systemName: "stop.fill").font(.system(size: 11))
@@ -174,11 +189,32 @@ private struct RecordingBody: View {
                 }
             }
             .buttonStyle(SocleButtonStyle(.primary, height: Socle.M.sizeCta)).frame(maxWidth: 320)
+            .accessibilityLabel(L.t("btn.stop"))
             Text(L.t("rec.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
             Text(AppModel.shortcutLabel).socle(Socle.T.monoSm).foregroundStyle(Socle.C.textSubtle)
         }
         .frame(maxWidth: .infinity).padding(.vertical, Socle.M.space8)
     }
+}
+
+private struct StartingBody: View {
+    var body: some View {
+        VStack(spacing: Socle.M.space4) {
+            ProgressView()
+            Text(L.t("start.title")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, Socle.M.space8)
+    }
+}
+
+/// Centre la fenêtre sur l'écran du pointeur à son ouverture (règle Socle « lancement centré »).
+private struct WindowCenterer: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { view.window?.socleCenter() }
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 private struct FinishingBody: View {
@@ -226,6 +262,7 @@ private struct FailedBody: View {
             Text(L.t("err.title")).socle(Socle.T.heading).foregroundStyle(Socle.C.danger)
             Text(message).socle(Socle.T.body).foregroundStyle(Socle.C.text).fixedSize(horizontal: false, vertical: true)
             Button(L.t("btn.retry")) { model.reset() }.buttonStyle(SocleButtonStyle(.primary)).fixedSize()
+                .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

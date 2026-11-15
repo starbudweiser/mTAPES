@@ -118,8 +118,10 @@ public enum TargetCatalog {
                 source: .init(kind: "app", displayID: d.displayID, appBundle: bundle,
                               bounds: [d.frame.origin.x, d.frame.origin.y, d.frame.width, d.frame.height], scale: scale))
 
-        case .zone(let index, let rect):
+        case .zone(let index, let requested):
             let d = try display(index, in: content)
+            let rect = requested.intersection(CGRect(x: 0, y: 0, width: d.width, height: d.height))
+            guard rect.width >= 16, rect.height >= 16 else { throw EngineError.targetNotFound("zone hors de l'écran ou trop petite") }
             let filter = SCContentFilter(display: d, excludingApplications: excluded, exceptingWindows: [])
             let info = SCShareableContent.info(for: filter)
             let scale = Double(info.pointPixelScale)

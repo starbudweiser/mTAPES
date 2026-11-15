@@ -23,8 +23,8 @@ if [ -x "$SIGN" ]; then "$SIGN" "$APP"; else codesign --force --deep -s - "$APP"
 
 if [ -z "${DEV:-}" ] && [ -z "${NO_INSTALL:-}" ]; then
   mkdir -p "$DEST"
-  if pgrep -x mTAPES >/dev/null && [ -z "${FORCE:-}" ]; then
-    echo "mTAPES tourne (une prise est peut-être en cours) : installation annulée. Relancer après l'arrêt, ou FORCE=1." >&2
+  if pgrep -f "$DEST/$APP/Contents/MacOS/mTAPES" >/dev/null && [ -z "${FORCE:-}" ]; then
+    echo "mTAPES installée tourne (une prise est peut-être en cours) : installation annulée. Quittez-la (⌘Q termine proprement la prise), ou FORCE=1." >&2
     exit 2
   fi
   rm -rf "${DEST:?}/${APP:?}"

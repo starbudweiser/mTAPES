@@ -1,0 +1,16 @@
+{
+  "encodeWallSeconds" : 3.0371270179748535,
+  "frames" : 481,
+  "megabytes" : 1.871971,
+  "megabytesPerMinute" : 9.359855,
+  "pixelFormat" : "420v",
+  "profile" : "balanced",
+  "realtimeFactor" : 3.9511024494463065,
+  "sourceSeconds" : 12
+}
+{
+  "psnr" : 41.087919,
+  "rawMegabytes" : 1.871971,
+  "referenceMegabytes" : 368.78801,
+  "ssim" : 0.997654
+}

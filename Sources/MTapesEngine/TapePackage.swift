@@ -45,6 +45,8 @@ public struct TapeMeta: Codable, Equatable {
     public var durationSeconds: Double
     public var firstFramePTS: Double           // secondes de l'horloge hôte ; origine des événements
     public var stats: Stats
+    public var state: String?                  // recording | complete | failed (absent : prise ancienne)
+    public var error: String?                  // cause d'un échec ou d'une coupure du flux
 
     public init(id: String, name: String, created: Date, origin: String, client: String?, source: Source,
                 profile: String, pixelFormat: String, codec: String, maxFPS: Int, width: Int, height: Int,
