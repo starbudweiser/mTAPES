@@ -1,0 +1,24 @@
+{
+  "averageMegabitsPerSecond" : 2.748084208684008,
+  "cpuCoresByProcess" : {
+    "VTEncoderXPCService" : 0.01771911139917834,
+    "mtapes" : 0.028038971914678815,
+    "replayd" : 0.012578014312298533
+  },
+  "cpuCoresSystem" : 2.709069882702792,
+  "cpuCoresTracked" : 0.058336097626155686,
+  "firstFrameLatency" : 0.11604858300415799,
+  "framesComplete" : 975,
+  "framesDropped" : 0,
+  "framesIdle" : 107,
+  "framesWritten" : 975,
+  "height" : 1440,
+  "megabytes" : 6.864844,
+  "megabytesPerMinute" : 20.61063156513006,
+  "peakResidentMegabytes" : 43.614208,
+  "pixelFormat" : "420v",
+  "profile" : "max",
+  "seconds" : 19.984377416985808,
+  "stopLatency" : 0.03580279101151973,
+  "width" : 3440
+}

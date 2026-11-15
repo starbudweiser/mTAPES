@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mTAPES — maquettes</title>
+<style>
+/* Socle — généré depuis tokens.json (thème sombre par défaut, clair via data-theme="light" ou préférence système) */
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1e1e1e;
+  --bg-sunken: #181818;
+  --bg-inset: #1a1a1a;
+  --surface: #222222;
+  --surface-raised: #262626;
+  --surface-hover: #2c2c2c;
+  --surface-selected: #303030;
+  --control: #333333;
+  --control-hover: #404040;
+  --control-pressed: #2a2a2a;
+  --control-strong: #444444;
+  --border: #333333;
+  --border-strong: #444444;
+  --border-subtle: #2e2e2e;
+  --border-control: #707070;
+  --text-strong: #ffffff;
+  --text: #dddddd;
+  --text-muted: #aaaaaa;
+  --text-subtle: #8f8f8f;
+  --text-disabled: #666666;
+  --accent: #0ea5e9;
+  --on-accent: #082f49;
+  --accent-fill: #0369a1;
+  --accent-fill-hover: #075985;
+  --accent-fill-pressed: #0c4a6e;
+  --on-accent-fill: #ffffff;
+  --accent-text: #38bdf8;
+  --action: #fbbf24;
+  --action-hover: #f59e0b;
+  --action-pressed: #d97706;
+  --on-action: #1a1a1a;
+  --success: #4ade80;
+  --success-bg: #14391f;
+  --success-border: #22c55e;
+  --success-soft: #86efac;
+  --warning: #fbbf24;
+  --warning-bg: #3f2a0c;
+  --warning-border: #f59e0b;
+  --warning-soft: #fde68a;
+  --danger: #f87171;
+  --danger-bg: #4a1c1c;
+  --danger-border: #ef4444;
+  --danger-soft: #fecaca;
+  --danger-fill: #923535;
+  --info-border: #38bdf8;
+  --info-soft: #bae6fd;
+  --bubble-help: #0ea5e9;
+  --bubble-tip: #22c55e;
+  --bubble-warning: #fbbf24;
+  --bubble-danger: #ef4444;
+  --bubble-ai: #f59e0b;
+  --on-bubble: #1a1a1a;
+  --bubble-icon: #262626;
+  --focus-ring: #38bdf8;
+  --scrim: rgba(0, 0, 0, 0.75);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f2f2;
+  --bg-sunken: #ebebeb;
+  --bg-inset: #f7f7f7;
+  --surface: #ffffff;
+  --surface-raised: #fafafa;
+  --surface-hover: #f0f0f0;
+  --surface-selected: #e8e8e8;
+  --control: #e6e6e6;
+  --control-hover: #d9d9d9;
+  --control-pressed: #cccccc;
+  --control-strong: #d4d4d4;
+  --border: #d4d4d4;
+  --border-strong: #bdbdbd;
+  --border-subtle: #e5e5e5;
+  --border-control: #8a8a8a;
+  --text-strong: #111111;
+  --text: #222222;
+  --text-muted: #555555;
+  --text-subtle: #666666;
+  --text-disabled: #a3a3a3;
+  --accent: #0284c7;
+  --on-accent: #ffffff;
+  --accent-fill: #0369a1;
+  --accent-fill-hover: #075985;
+  --accent-fill-pressed: #0c4a6e;
+  --on-accent-fill: #ffffff;
+  --accent-text: #0369a1;
+  --action: #fbbf24;
+  --action-hover: #f59e0b;
+  --action-pressed: #d97706;
+  --on-action: #1a1a1a;
+  --success: #15803d;
+  --success-bg: #dcfce7;
+  --success-border: #16a34a;
+  --success-soft: #14532d;
+  --warning: #b45309;
+  --warning-bg: #fef3c7;
+  --warning-border: #d97706;
+  --warning-soft: #78350f;
+  --danger: #b91c1c;
+  --danger-bg: #fee2e2;
+  --danger-border: #dc2626;
+  --danger-soft: #7f1d1d;
+  --danger-fill: #eb9090;
+  --info-border: #0284c7;
+  --info-soft: #0c4a6e;
+  --bubble-help: #0ea5e9;
+  --bubble-tip: #22c55e;
+  --bubble-warning: #fbbf24;
+  --bubble-danger: #ef4444;
+  --bubble-ai: #f59e0b;
+  --on-bubble: #1a1a1a;
+  --bubble-icon: #262626;
+  --focus-ring: #0369a1;
+  --scrim: rgba(17, 17, 17, 0.45);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f2f2f2;
+    --bg-sunken: #ebebeb;
+    --bg-inset: #f7f7f7;
+    --surface: #ffffff;
+    --surface-raised: #fafafa;
+    --surface-hover: #f0f0f0;
+    --surface-selected: #e8e8e8;
+    --control: #e6e6e6;
+    --control-hover: #d9d9d9;
+    --control-pressed: #cccccc;
+    --control-strong: #d4d4d4;
+    --border: #d4d4d4;
+    --border-strong: #bdbdbd;
+    --border-subtle: #e5e5e5;
+    --border-control: #8a8a8a;
+    --text-strong: #111111;
+    --text: #222222;
+    --text-muted: #555555;
+    --text-subtle: #666666;
+    --text-disabled: #a3a3a3;
+    --accent: #0284c7;
+    --on-accent: #ffffff;
+    --accent-fill: #0369a1;
+    --accent-fill-hover: #075985;
+    --accent-fill-pressed: #0c4a6e;
+    --on-accent-fill: #ffffff;
+    --accent-text: #0369a1;
+    --action: #fbbf24;
+    --action-hover: #f59e0b;
+    --action-pressed: #d97706;
+    --on-action: #1a1a1a;
+    --success: #15803d;
+    --success-bg: #dcfce7;
+    --success-border: #16a34a;
+    --success-soft: #14532d;
+    --warning: #b45309;
+    --warning-bg: #fef3c7;
+    --warning-border: #d97706;
+    --warning-soft: #78350f;
+    --danger: #b91c1c;
+    --danger-bg: #fee2e2;
+    --danger-border: #dc2626;
+    --danger-soft: #7f1d1d;
+    --danger-fill: #eb9090;
+    --info-border: #0284c7;
+    --info-soft: #0c4a6e;
+  --bubble-help: #0ea5e9;
+  --bubble-tip: #22c55e;
+  --bubble-warning: #fbbf24;
+  --bubble-danger: #ef4444;
+  --bubble-ai: #f59e0b;
+  --on-bubble: #1a1a1a;
+  --bubble-icon: #262626;
+    --focus-ring: #0369a1;
+    --scrim: rgba(17, 17, 17, 0.45);
+  }
+}
+:root {
+  --space-1: 4px;
+  --space-1\.5: 6px;
+  --space-2: 8px;
+  --space-2\.5: 10px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius: 4px;
+  --radius-field: 0px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  --size-bar: 40px;
+  --size-control: 32px;
+  --size-control-lg: 36px;
+  --size-cta: 56px;
+  --size-choice: 16px;
+  --size-scrollbar: 8px;
+  --size-sidebar-min: 200px;
+  --size-splash-width: 500px;
+  --size-splash-height: 190px;
+  --size-splash-title: 40px;
+  --opacity-disabled: 0.4;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+</style>
+<style>
+/* Maquettes mTAPES — Socle standard, textes desktop à 110 % */
+:root { --brand: #f43f5e; }
+[data-theme="light"] { --brand: #e11d48; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg-sunken); color: var(--text); font: 13px/1.45 var(--font-sans); -webkit-font-smoothing: antialiased; }
+.b { color: var(--brand); }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--text-muted); } .subtle { color: var(--text-subtle); } .at { color: var(--accent-text); }
+.ok { color: var(--success); } .warn { color: var(--warning); } .err { color: var(--danger); }
+
+/* Navigation des maquettes (hors appli) */
+.nav { position: sticky; top: 0; z-index: 10; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 28px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.nav a { color: var(--text-muted); text-decoration: none; padding: 5px 10px; border-radius: 4px; }
+.nav a:hover { background: var(--control-hover); color: var(--text-strong); }
+.nav .sp { flex: 1; }
+.nav button { all: unset; cursor: pointer; padding: 5px 10px; border-radius: 4px; background: var(--control); color: var(--text); }
+section.screen { scroll-margin-top: 50px; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+section.screen > h2 { margin: 0; width: 1240px; max-width: 100%; font-size: 16px; color: var(--text-strong); letter-spacing: .025em; }
+section.screen > p.note { margin: 0 0 4px; width: 1240px; max-width: 100%; color: var(--accent-text); }
+
+/* Fenêtre type */
+.win { width: 1240px; max-width: 100%; border: 1px solid var(--border-strong); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.titlebar { height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 14px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.lights { display: flex; gap: 8px; } .lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; } .lights i:nth-child(2){background:#febc2e} .lights i:nth-child(3){background:#28c840}
+.titlebar .ttl { font-weight: 700; font-size: 15px; letter-spacing: .025em; color: var(--text-strong); }
+.titlebar .sp { flex: 1; }
+.cols { display: grid; grid-template-columns: 232px 1fr 320px; min-height: 640px; }
+.cols.two { grid-template-columns: 232px 1fr; }
+
+/* Barre latérale + filigrane */
+.side { position: relative; overflow: hidden; background: var(--surface-raised); border-right: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.side .wm { position: absolute; width: 130%; right: -38%; bottom: -14%; opacity: .05; color: var(--text-strong); pointer-events: none; }
+.side h4 { margin: 14px 8px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-subtle); }
+.side h4:first-child { margin-top: 2px; }
+.navi { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 8px; border-radius: 4px; color: var(--text); position: relative; }
+.navi.sel { background: var(--surface-selected); color: var(--text-strong); }
+.navi.sel::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 2px; background: var(--accent); }
+.navi .cnt { margin-left: auto; font: 11px var(--font-mono); color: var(--text-subtle); }
+.navi .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); margin-left: auto; }
+.side .grow { flex: 1; }
+.cta { position: relative; height: 56px; border-radius: 4px; background: var(--action); color: var(--on-action); font-weight: 700; letter-spacing: .05em; display: flex; align-items: center; justify-content: center; gap: 6px; padding-left: calc(12px + .025em); }
+.cta small { display: block; font-weight: 500; letter-spacing: 0; font-size: 11px; opacity: .8; }
+
+/* Zones */
+.main { padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.detail { background: var(--surface); border-left: 1px solid var(--border); padding: 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.h { font-size: 16px; font-weight: 700; color: var(--text-strong); letter-spacing: .025em; margin: 0; }
+.t { font-size: 15px; font-weight: 700; color: var(--text-strong); letter-spacing: .025em; margin: 0; }
+.sub { color: var(--accent-text); margin: 2px 0 0; }
+.row { display: flex; align-items: center; gap: 8px; }
+.row .sp { flex: 1; }
+
+/* Contrôles */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 4px; background: var(--control); color: var(--text); white-space: nowrap; }
+.btn.pri { background: var(--accent-fill); color: var(--on-accent-fill); }
+.btn.act { background: var(--action); color: var(--on-action); font-weight: 700; }
+.btn.flow { height: 36px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; padding-left: calc(18px + .03em); padding-right: calc(18px - .03em); }
+.btn.sm { height: 26px; padding: 0 10px; font-size: 12px; }
+.seg { display: inline-flex; background: var(--bg-sunken); border-radius: 4px; padding: 2px; }
+.seg span { padding: 4px 12px; border-radius: 3px; color: var(--text-muted); white-space: nowrap; }
+.seg span.on { background: var(--accent-fill); color: var(--on-accent-fill); }
+.seg span.mid { background: var(--control); color: var(--accent-text); }
+.field { white-space: nowrap; height: 36px; background: var(--bg-sunken); display: flex; align-items: center; padding: 0 12px; color: var(--text-strong); }
+.search { width: 260px; color: var(--text-subtle); }
+.badge { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--control); color: var(--text-muted); white-space: nowrap; }
+.badge.ok { background: var(--success-bg); color: var(--success); }
+.badge.warn { background: var(--warning-bg); color: var(--warning); }
+.badge.ai { color: var(--accent-text); }
+.toggle { width: 34px; height: 20px; border-radius: 10px; background: var(--control-strong); position: relative; flex: none; }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-muted); }
+.toggle.on { background: var(--accent-fill); } .toggle.on::after { left: 17px; background: #fff; }
+.check { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border-control); flex: none; }
+.check.on { background: var(--accent); border-color: var(--accent); position: relative; }
+.check.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.kv { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; }
+.kv > :nth-child(odd) { color: var(--text-muted); }
+.kv > :nth-child(even) { color: var(--text-strong); }
+.hr { height: 1px; background: var(--border); }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 24px; }
+.callout { background: var(--surface-raised); border-left: 2px solid var(--info-border); padding: 10px 12px; color: var(--text); }
+
+/* Bibliothèque */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.card.sel { border-color: var(--accent); }
+.thumb { aspect-ratio: 16/9; position: relative; display: flex; align-items: center; justify-content: center; }
+.thumb .fr { width: 66%; height: 64%; border-radius: 4px; background: var(--bg); border: 1px solid rgba(255,255,255,.12); }
+.thumb .dur { position: absolute; right: 6px; bottom: 6px; font: 11px var(--font-mono); background: rgba(0,0,0,.65); color: #fff; padding: 1px 5px; border-radius: 3px; }
+.thumb .who { position: absolute; left: 6px; top: 6px; }
+.card .meta { padding: 10px 12px 12px; }
+.card .nm { color: var(--text-strong); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g1 { background: linear-gradient(135deg,#3b2a6b,#1f4f7a); } .g2 { background: linear-gradient(135deg,#7a2a3f,#3b2a6b); }
+.g3 { background: linear-gradient(135deg,#1f5f52,#1f3a7a); } .g4 { background: #2b2b33; } .g5 { background: linear-gradient(135deg,#6b4a1f,#7a2a3f); }
+
+/* Barre de menus */
+.desk { width: 1240px; max-width: 100%; height: 620px; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid var(--border-strong);
+  background: linear-gradient(160deg,#2a2f45,#18202f 60%,#2a1f30); }
+[data-theme="light"] .desk { background: linear-gradient(160deg,#c9d3e6,#e7e2ee); }
+.menubar { height: 26px; background: rgba(20,20,24,.6); color: #eee; display: flex; align-items: center; gap: 18px; padding: 0 14px; font-size: 13px; }
+[data-theme="light"] .menubar { background: rgba(255,255,255,.55); color: #111; }
+.menubar .sp { flex: 1; }
+.mbi { display: inline-flex; align-items: center; gap: 5px; padding: 1px 6px; border-radius: 5px; }
+.mbi.press { background: rgba(255,255,255,.22); }
+.rec { color: #ff453a; font-variant-numeric: tabular-nums; font-weight: 600; }
+.pop { position: absolute; top: 34px; width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.menu { position: absolute; top: 32px; width: 290px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px; }
+.menu .mi { height: 28px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; color: var(--text); }
+.menu .mi.hl { background: var(--accent-fill); color: #fff; }
+.menu .mi kbd { margin-left: auto; font: 12px var(--font-sans); color: var(--text-subtle); }
+.menu .mi.hl kbd { color: #dbeafe; }
+.menu .sep { height: 1px; background: var(--border); margin: 5px 8px; }
+.menu .hd { padding: 6px 10px 2px; font-size: 11px; color: var(--text-subtle); font-weight: 600; }
+.src { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.src div { height: 62px; border-radius: 4px; background: var(--bg-sunken); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-muted); font-size: 12px; text-align: center; }
+.src div.on { outline: 1px solid var(--accent); color: var(--text-strong); background: var(--surface-hover); }
+.selzone { position: absolute; border: 2px dashed var(--accent); background: rgba(14,165,233,.06); }
+.selzone .lbl { position: absolute; left: 0; top: -26px; background: var(--accent-fill); color: #fff; font: 11px var(--font-mono); padding: 3px 7px; border-radius: 3px; }
+.fakeapp { position: absolute; border-radius: 10px; background: var(--bg); border: 1px solid var(--border-strong); overflow: hidden; }
+.fakeapp .tb { height: 28px; background: var(--surface-raised); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; gap: 6px; }
+.fakeapp .tb i { width: 9px; height: 9px; border-radius: 50%; background: #555; }
+.hud { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px 8px 14px; }
+
+/* Éditeur */
+.stage { background: var(--bg-sunken); display: flex; align-items: center; justify-content: center; padding: 20px; height: 380px; }
+.canvas { position: relative; height: 100%; aspect-ratio: 16/9; border-radius: 4px; overflow: hidden; background: linear-gradient(135deg,#3b2a6b,#1f4f7a); display: flex; align-items: center; justify-content: center; }
+.canvas .shot { width: 82%; height: 80%; border-radius: 10px; background: var(--bg); border: 1px solid rgba(255,255,255,.15); position: relative; overflow: hidden; transform: scale(1.0); }
+.canvas .shot .tb { height: 22px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.canvas .zoomrect { position: absolute; left: 44%; top: 34%; width: 38%; height: 38%; border: 1px dashed var(--action); }
+.canvas .cur { position: absolute; left: 61%; top: 52%; width: 16px; height: 22px; }
+.canvas .ripple { position: absolute; left: calc(61% - 11px); top: calc(52% - 11px); width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,.7); }
+.canvas.v { aspect-ratio: 9/16; }
+.tl { border-top: 1px solid var(--border); background: var(--surface); padding: 10px 16px 14px; }
+.ruler { display: flex; justify-content: space-between; font: 11px var(--font-mono); color: var(--text-subtle); padding-left: 92px; margin-bottom: 6px; }
+.track { display: grid; grid-template-columns: 84px 1fr; gap: 8px; align-items: center; height: 30px; }
+.track > span { color: var(--text-muted); font-size: 12px; }
+.lane { position: relative; height: 22px; background: var(--bg-sunken); }
+.seg2 { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; font-size: 11px; display: flex; align-items: center; padding: 0 6px; overflow: hidden; white-space: nowrap; }
+.s-vid { background: var(--control); color: var(--text-muted); }
+.s-fast { background: repeating-linear-gradient(45deg,var(--control) 0 6px,var(--control-strong) 6px 12px); color: var(--text); }
+.s-zoom { background: var(--accent-fill); color: #fff; }
+.s-zoom.sel { outline: 2px solid var(--action); }
+.s-txt { background: var(--control); color: var(--accent-text); }
+.clk { position: absolute; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); }
+.clk.ai { background: var(--accent-text); }
+.playhead { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--action); left: 38%; }
+
+/* Export */
+.dests { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.dest { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.dest.on { border-color: var(--accent); }
+.ratio { display: flex; align-items: flex-end; justify-content: center; height: 64px; }
+.ratio i { display: block; border: 2px solid var(--text-muted); border-radius: 3px; }
+.dest.on .ratio i { border-color: var(--accent); }
+.queue { display: flex; flex-direction: column; gap: 8px; }
+.bar { height: 6px; background: var(--bg-sunken); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+
+/* Pilotage IA */
+.clients { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.client { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.mono-tile { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; flex: none; }
+.log { background: var(--bg-sunken); padding: 12px; font: 12px/1.7 var(--font-mono); color: var(--text); }
+.log .tm { color: var(--text-subtle); } .log .fn { color: var(--accent-text); } .log .ok { color: var(--success); }
+
+/* Réglages */
+.mods { columns: 2; column-gap: 16px; }
+.mods .panel { break-inside: avoid; margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
+.set { display: flex; align-items: center; gap: 12px; min-height: 32px; }
+.set > div:first-child { flex: 1; }
+.set small { display: block; color: var(--text-muted); font-size: 12px; }
+
+.titlebar:has(.rec-btn) { height:60px; }
+.rec-btn { height:40px; padding:0 22px; gap:10px; font-size:14px; font-weight:800; letter-spacing:.02em; border-radius:6px; }
+.rec-btn .kb { font-weight:500; font-size:13px; opacity:.75; margin-left:4px; }
+/* Réglages à onglets */
+.tabs { display:flex; gap:2px; padding:0 20px; background:var(--surface-raised); border-bottom:1px solid var(--border); }
+.tabs span { position:relative; padding:11px 14px; color:var(--text-muted); white-space:nowrap; }
+.tabs span.on { color:var(--text-strong); }
+.tabs span.on::after { content:""; position:absolute; left:8px; right:8px; bottom:-1px; height:2px; background:var(--accent); }
+.sl { display:flex; align-items:center; gap:12px; }
+.sl .tr { position:relative; width:180px; height:4px; background:var(--control-strong); border-radius:2px; flex:none; }
+.sl .tr i { position:absolute; left:0; top:0; bottom:0; background:var(--accent); border-radius:2px; }
+.sl .tr b { position:absolute; top:-6px; width:16px; height:16px; margin-left:-8px; border-radius:50%; background:#fff; border:1px solid var(--border-control); }
+.sl .v { width:54px; text-align:right; color:var(--accent-text); font-variant-numeric:tabular-nums; }
+.sw { display:flex; gap:8px; align-items:center; }
+.sw i { width:22px; height:22px; border-radius:50%; display:block; }
+.sw i.on { outline:2px solid var(--accent); outline-offset:2px; }
+.tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.tile { background:var(--bg-sunken); border-radius:4px; padding:10px 6px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text-muted); font-size:12px; text-align:center; }
+.tile.on { outline:1px solid var(--accent); background:var(--surface-hover); color:var(--text-strong); }
+.tile .pv { width:52px; height:52px; border-radius:4px; background:linear-gradient(135deg,#3b2a6b,#1f4f7a); position:relative; overflow:hidden; }
+.tile.tl2 .pv { height:40px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px; border-radius:4px; background:var(--control); color:var(--accent-text); font-size:12px; }
+.chip u { text-decoration:none; color:var(--text-subtle); }
+.scr { position:relative; aspect-ratio:16/10; border-radius:4px; overflow:hidden; background:linear-gradient(160deg,#2a2f45,#18202f 60%,#2a1f30); }
+.scr .w { position:absolute; border-radius:5px; background:var(--bg); border:1px solid var(--border-strong); }
+.scr .w::before { content:""; position:absolute; left:0; right:0; top:0; height:9px; background:var(--surface-raised); border-radius:5px 5px 0 0; }
+.scr .z { position:absolute; border:2px dashed var(--accent); background:rgba(14,165,233,.08); }
+.scr .z b { position:absolute; width:8px; height:8px; background:#fff; border:1px solid var(--accent); }
+.scr .zl { position:absolute; background:var(--accent-fill); color:#fff; font:11px var(--font-mono); padding:2px 6px; border-radius:3px; }
+.zl2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.zcard { background:var(--bg-sunken); border-radius:4px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
+.zcard.on { outline:1px solid var(--accent); }
+.zcard b { color:var(--text-strong); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cv2 { position:relative; aspect-ratio:16/9; border-radius:4px; overflow:hidden; background:linear-gradient(135deg,#3b2a6b,#1f4f7a); }
+.cv2 .sh { position:absolute; left:9%; top:10%; right:9%; bottom:10%; border-radius:6px; background:var(--bg); border:1px solid rgba(255,255,255,.15); }
+.cv2 .sh::before { content:""; position:absolute; left:0; right:0; top:0; height:14px; background:var(--surface-raised); border-radius:6px 6px 0 0; }
+.cv2 .zr { position:absolute; border:1px dashed var(--action); }
+.curve { height:70px; width:100%; }
+.mbstrip { display:flex; align-items:center; justify-content:flex-end; gap:14px; height:28px; padding:0 14px; border-radius:4px; font-size:13px; }
+.mbstrip.d { background:#2b2b31; color:#eee; } .mbstrip.l { background:#e9e9ee; color:#111; }
+.mbstrip .lbl { margin-right:auto; font-size:12px; opacity:.7; }
+.mbstrip .ic { display:inline-flex; align-items:center; gap:5px; }
+.iconrow { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.apptile { background:var(--bg-sunken); border-radius:4px; padding:12px 6px 10px; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; }
+.apptile.on { outline:1px solid var(--accent); background:var(--surface-hover); color:var(--text-strong); }
+.apptile .ai { width:56px; height:56px; border-radius:13px; display:flex; align-items:center; justify-content:center; }
+
+/* ===== Mise en page fluide : rien n'est coupé, jamais (fenêtre minimale 900 px) ===== */
+.win { width:100%; max-width:1240px; }
+section.screen > h2, section.screen > p.note { width:100%; max-width:1240px; }
+.titlebar { height:auto; min-height:40px; padding:8px 14px; flex-wrap:wrap; row-gap:8px; }
+.titlebar:has(.rec-btn) { min-height:60px; }
+.cols { grid-template-columns:200px minmax(0,1fr) 300px; }
+.cols.two { grid-template-columns:200px minmax(0,1fr); }
+.cols.fin { grid-template-columns:minmax(0,1fr) 300px; min-height:0; }
+.navi { height:auto; min-height:32px; padding:6px 8px; }
+.card .nm { white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:anywhere; }
+.grid { grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); }
+.dests, .clients { grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+.tiles { grid-template-columns:repeat(auto-fit,minmax(84px,1fr)); }
+.iconrow { grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); }
+.mods { columns:auto 420px; }
+.set { flex-wrap:wrap; }
+.set > div:first-child { flex:1 1 200px; min-width:0; }
+.seg { flex-wrap:wrap; max-width:100%; }
+.tabs { flex-wrap:wrap; }
+.sl .tr { flex:0 1 180px; min-width:90px; }
+.kv > * { overflow-wrap:anywhere; min-width:0; }
+.mono, .log div { overflow-wrap:anywhere; }
+.field.wrap { white-space:normal; height:auto; min-height:36px; padding:8px 12px; gap:8px; flex-wrap:wrap; overflow-wrap:anywhere; }
+.stage { height:auto; }
+.canvas { height:auto; width:min(100%,604px); }
+.row.wrap { flex-wrap:wrap; }
+.hr { flex:none; }
+/* Cibles de capture (maquette 2) */
+.desk { height:auto; display:flex; flex-direction:column; }
+.deskbody { display:flex; flex-wrap:wrap; gap:24px; padding:24px; align-items:flex-start; }
+.pop { position:static; flex:0 1 360px; }
+.target { position:relative; flex:1 1 320px; min-height:400px; margin-top:28px; border:2px dashed var(--accent); background:rgba(14,165,233,.06); border-radius:6px; overflow:hidden; }
+.target .lbl { position:absolute; left:0; top:0; background:var(--accent-fill); color:#fff; font:11px var(--font-mono); padding:3px 7px; z-index:1; }
+.target .fakeapp { position:absolute; inset:0; border-radius:0; border:0; }
+.hudrow { display:flex; justify-content:center; padding:0 24px 24px; }
+.hud { position:static; transform:none; flex-wrap:wrap; justify-content:center; }
+.menuwrap { display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px; padding:16px 28px 28px; }
+.menu { position:static; flex:0 0 290px; }
+/* Segments de la ligne de temps : libellés courts, jamais rognés */
+.seg2 { overflow:visible; padding:0 4px; }
+/* Assistant */
+.wizgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,540px),1fr)); gap:20px; width:100%; max-width:1240px; align-items:stretch; }
+.wiz { display:flex; flex-direction:column; max-width:none; }
+.wiz .wizbody { flex:1; padding:6px 24px 20px; display:flex; flex-direction:column; gap:14px; }
+.wizfoot { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:14px 20px; border-top:1px solid var(--border); background:var(--surface-raised); }
+.wizfoot .sp { flex:1; }
+.stepper { display:flex; gap:4px; padding:16px 20px 4px; }
+.stp { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; color:var(--text-subtle); text-align:center; min-width:0; }
+.stp i { width:22px; height:22px; border-radius:50%; border:1px solid var(--border-control); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:12px; }
+.stp.on { color:var(--text-strong); } .stp.on i { background:var(--accent-fill); color:#fff; border-color:var(--accent-fill); }
+.stp.done i { background:var(--success-bg); color:var(--success); border-color:var(--success-border); }
+.choice { display:flex; gap:12px; align-items:flex-start; background:var(--bg-sunken); border-radius:4px; padding:12px 14px; }
+.choice.on { outline:1px solid var(--accent); background:var(--surface-hover); }
+.choice b { color:var(--text-strong); margin-right:6px; } .choice p { margin:3px 0 0; color:var(--text-muted); }
+.rad { width:16px; height:16px; border-radius:50%; border:1px solid var(--border-control); flex:none; margin-top:2px; position:relative; }
+.rad.on { border-color:var(--accent); } .rad.on::after { content:""; position:absolute; inset:3px; border-radius:50%; background:var(--accent); }
+.perm { display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:var(--bg-sunken); border-radius:4px; padding:10px 14px; }
+.perm > div:first-child { flex:1 1 200px; min-width:0; }
+.perm b { color:var(--text-strong); } .perm p { margin:2px 0 0; color:var(--text-muted); font-size:12px; }
+.pfgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; }
+.pf { background:var(--bg-sunken); border-radius:4px; padding:12px; display:flex; flex-direction:column; gap:2px; color:var(--text-muted); font-size:12px; }
+.pf.on { outline:1px solid var(--accent); background:var(--surface-hover); }
+.pf b { color:var(--text-strong); font-size:13px; } .pf .n { color:var(--accent-text); font-variant-numeric:tabular-nums; }
+/* Mode Simple */
+.simplegrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr)); gap:20px; width:100%; max-width:1240px; align-items:start; }
+.simplegrid .win { max-width:none; }
+.big3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+.bigtile { background:var(--bg-sunken); border-radius:4px; min-height:92px; padding:14px 10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; color:var(--text-muted); }
+.bigtile .g { font-size:24px; line-height:1; color:var(--text); }
+.bigtile.on { outline:1px solid var(--accent); background:var(--surface-hover); color:var(--text-strong); }
+.bigtile small { color:var(--text-subtle); font-size:12px; }
+.bigcta { align-self:center; height:56px; padding:0 40px; font-size:16px; border-radius:6px; gap:12px; }
+.done-list { display:flex; flex-direction:column; gap:6px; }
+.done-list div { display:flex; gap:8px; } .done-list i { color:var(--success); font-style:normal; }
+.actbtn { display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--control); border-radius:4px; padding:10px 14px; color:var(--text-strong); }
+.actbtn.pri { background:var(--accent-fill); color:#fff; }
+.actbtn .sp { flex:1; } .actbtn small { opacity:.75; }
+@media (max-width:1100px) {
+  .cols { grid-template-columns:200px minmax(0,1fr); }
+  .cols .detail { grid-column:1 / -1; border-left:0; border-top:1px solid var(--border); }
+  .cols.fin { grid-template-columns:minmax(0,1fr); }
+  .cols.fin .detail { border-top:1px solid var(--border); }
+  .mods { columns:1; }
+  .cols .detail > .thumb { max-width:320px; }
+}
+@media (max-width:760px) {
+  section.screen { padding:20px 16px; }
+  .cols, .cols.two { grid-template-columns:minmax(0,1fr); }
+  .side { border-right:0; border-bottom:1px solid var(--border); }
+  .main { padding:20px 16px; }
+}
+
+/* ===== Montage IA ===== */
+.cchip { display:inline-flex; align-items:center; height:30px; padding:0 12px; border-radius:4px; background:var(--control); color:var(--text); white-space:nowrap; }
+.cchip.on { background:var(--accent-fill); color:#fff; }
+.chiprow { display:flex; flex-wrap:wrap; gap:8px; }
+.brief { background:var(--bg-sunken); padding:12px 14px; color:var(--text-strong); border-left:2px solid var(--action); }
+.aimark { color:var(--action); margin-right:3px; }
+.varg { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+.var { background:var(--bg-sunken); border-radius:4px; padding:8px; display:flex; flex-direction:column; gap:6px; color:var(--text-muted); font-size:12px; }
+.var.on { outline:1px solid var(--accent); background:var(--surface-hover); color:var(--text-strong); }
+.var .thumb { border-radius:3px; }
+.var b { color:var(--text-strong); font-size:13px; }
+.ex { display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:var(--bg-sunken); border-radius:4px; padding:10px 12px; }
+.ex > div:first-child { flex:1 1 220px; min-width:0; } .ex b { color:var(--text-strong); } .ex p { margin:2px 0 0; color:var(--text-muted); }
+.ing { display:flex; gap:12px; align-items:flex-start; }
+.ing i { flex:none; width:22px; height:22px; border-radius:50%; background:var(--accent-fill); color:#fff; font-style:normal; font-size:12px; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+.ing b { color:var(--text-strong); } .ing p { margin:2px 0 0; color:var(--text-muted); }
+.nope { color:var(--danger); margin-right:6px; }
+
+/* Fenêtre « À propos » (modèle Socle / mDESK : 356 px, marges 28) */
+.aboutgrid { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; width:100%; max-width:1240px; }
+.about { width:356px; max-width:100%; border:1px solid var(--border-strong); border-radius:10px; overflow:hidden; background:var(--bg); }
+.about .titlebar { justify-content:flex-start; }
+.about .lights i:nth-child(n+2) { background:var(--control-strong); }
+.about .abody { padding:28px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; }
+.about .aicon { width:84px; height:84px; border-radius:19px; background:linear-gradient(135deg,#fb7185,#be123c); display:flex; align-items:center; justify-content:center; }
+.about .aname { font-size:17px; font-weight:700; color:var(--text-strong); margin-top:0; }
+.about .aver { color:var(--text-muted); margin-top:-6px; }
+.about .adesc { margin-top:6px; }
+.about .acoll { color:var(--text-strong); font-weight:600; letter-spacing:.04em; }
+.about .aauth { font-weight:700; color:var(--text-strong); }
+.about .amut { color:var(--text-muted); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <strong style="color:var(--text-strong);letter-spacing:.025em"><span class="b">m</span>TAPES — maquettes</strong>
+  <a href="#sa">A Assistant</a><a href="#sm">B Simple</a><a href="#sc">C Montage IA</a><a href="#sd">D Guide du brief</a><a href="#sab">E À propos</a><a href="#s1">1 Bibliothèque</a><a href="#s2">2 Enregistrer</a><a href="#s3">3 Finition</a><a href="#sia">4 Montage IA avancé</a><a href="#s4">5 Export</a><a href="#s5">6 Pilotage IA</a><a href="#s6">7 Capture</a><a href="#sq">8 Qualité</a><a href="#sai">9 Montage IA</a><a href="#s7">10 Zoom</a><a href="#s8">11 Clics et curseur</a><a href="#s9">12 Icône</a><a href="#s10">13 Général</a>
+  <span class="sp"></span>
+  <button onclick="const r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Sombre / clair</button>
+</nav>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="tape" viewBox="0 0 64 40"><rect x="1" y="1" width="62" height="38" rx="5" fill="currentColor"/><rect x="9" y="8" width="46" height="16" rx="3" fill="var(--bg)"/><circle cx="21" cy="16" r="5" fill="currentColor"/><circle cx="43" cy="16" r="5" fill="currentColor"/><path d="M16 39 L20 30 H44 L48 39 Z" fill="var(--bg)"/></symbol>
+</svg>
+
+<!-- ============ 1 BIBLIOTHÈQUE ============ -->
+<section class="screen" id="sa">
+  <h2>A · Assistant de configuration</h2>
+  <p class="note">Au premier lancement, puis à la demande (Réglages, Général). Cinq étapes, boutons toujours à la même place ; l'étape IA n'existe qu'en mode Avancé. Les autorisations se cochent toutes seules.</p>
+  <div class="wizgrid"><div class="win wiz"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Assistant de configuration</span><span class="sp"></span><span class="subtle">Étape 1 sur 5</span></div><div class="stepper"><div class="stp on"><i>1</i><span>Bienvenue</span></div><div class="stp "><i>2</i><span>Autorisations</span></div><div class="stp "><i>3</i><span>Usage</span></div><div class="stp "><i>4</i><span>Votre IA</span></div><div class="stp "><i>5</i><span>Prêt</span></div></div><div class="wizbody"><div><p class="h">Bienvenue dans <span class="b">m</span>TAPES</p><p class="sub">Trois minutes pour être prêt. Rien n'est filmé tant que vous n'appuyez pas sur Enregistrer.</p></div>
+<p class="t" style="font-size:13px">Comment voulez-vous l'utiliser ?</p>
+<div class="choice on"><i class="rad on"></i><div><b>Simple</b><span class="badge ok">Conseillé pour débuter</span><p>Je filme mon écran, mTAPES s'occupe du reste : zooms, curseur, vidéo légère.</p></div></div>
+<div class="choice"><i class="rad"></i><div><b>Avancé · IA</b><span class="badge ai">MCP</span><p>Une IA (Claude, Codex, Cursor…) filme pour moi, je retouche si besoin.</p></div></div>
+<div class="choice"><i class="rad"></i><div><b>Les deux</b><p>Je commence simple, j'active l'IA quand je veux.</p></div></div>
+<p class="muted" style="margin:0;font-size:12px">Vous pourrez changer de mode à tout moment, en haut à droite de la fenêtre ou dans Réglages.</p></div><div class="wizfoot"><span class="sp"></span><span class="subtle">Passer l'assistant</span><span class="btn pri flow">Continuer</span></div></div><div class="win wiz"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Assistant de configuration</span><span class="sp"></span><span class="subtle">Étape 2 sur 5</span></div><div class="stepper"><div class="stp done"><i>✓</i><span>Bienvenue</span></div><div class="stp on"><i>2</i><span>Autorisations</span></div><div class="stp "><i>3</i><span>Usage</span></div><div class="stp "><i>4</i><span>Votre IA</span></div><div class="stp "><i>5</i><span>Prêt</span></div></div><div class="wizbody"><div><p class="h">Autorisations</p><p class="sub">macOS demande votre accord. Chaque bouton ouvre le bon écran de Réglages Système.</p></div>
+<div class="perm"><div><b>Enregistrement de l'écran</b> <span class="badge">Obligatoire</span><p>Pour filmer ce que vous choisissez, rien d'autre.</p></div><span class="badge ok">✓ Accordée</span></div>
+<div class="perm"><div><b>Surveillance de l'entrée</b> <span class="badge">Recommandée</span><p>Pour zoomer sur vos vrais clics.</p></div><span class="badge warn">À accorder</span><span class="btn sm pri">Autoriser</span></div>
+<div class="perm"><div><b>Accessibilité</b> <span class="badge">Facultative</span><p>Pour encadrer le bouton cliqué.</p></div><span class="btn sm">Autoriser</span></div>
+<div class="perm"><div><b>Micro</b> <span class="badge">Facultative</span><p>Pour commenter à la voix.</p></div><span class="btn sm">Autoriser</span></div>
+<div class="callout">Cette page se met à jour toute seule quand vous revenez de Réglages Système. Rien ne quitte votre Mac.</div></div><div class="wizfoot"><span class="btn flow">Retour</span><span class="sp"></span><span class="subtle">Passer l'assistant</span><span class="btn pri flow">Continuer</span></div></div><div class="win wiz"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Assistant de configuration</span><span class="sp"></span><span class="subtle">Étape 3 sur 5</span></div><div class="stepper"><div class="stp done"><i>✓</i><span>Bienvenue</span></div><div class="stp done"><i>✓</i><span>Autorisations</span></div><div class="stp on"><i>3</i><span>Usage</span></div><div class="stp "><i>4</i><span>Votre IA</span></div><div class="stp "><i>5</i><span>Prêt</span></div></div><div class="wizbody"><div><p class="h">Votre usage</p><p class="sub">mTAPES prépare les bons formats d'export, modifiables ensuite.</p></div>
+<p class="t" style="font-size:13px">Où publierez-vous vos vidéos ?</p>
+<div class="perm"><div class="check on"></div><div><b>Page de présentation (GitHub)</b><p>GIF léger, moins de 10 Mo</p></div></div>
+<div class="perm"><div class="check on"></div><div><b>Publication d'une version</b><p>MP4 1080p</p></div></div>
+<div class="perm"><div class="check"></div><div><b>Vidéo verticale (réseaux)</b><p>MP4 vertical 9:16</p></div></div>
+<div class="perm"><div><b>Montage automatique par IA</b><p>Gratuit, sur votre Mac ; la vidéo ne le quitte pas. Modifiable dans Réglages.</p></div><div class="toggle on"></div></div>
+<p class="t" style="font-size:13px">Quel style ?</p>
+<div class="big3"><div class="bigtile on"><span class="g">◔</span>Sobre<small>Zoom doux</small></div><div class="bigtile"><span class="g">◉</span>Dynamique<small>Zoom et onde marqués</small></div><div class="bigtile"><span class="g">▯</span>Vertical<small>9:16, suit l'action</small></div></div></div><div class="wizfoot"><span class="btn flow">Retour</span><span class="sp"></span><span class="subtle">Passer l'assistant</span><span class="btn pri flow">Continuer</span></div></div><div class="win wiz"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Assistant de configuration</span><span class="sp"></span><span class="subtle">Étape 4 sur 5</span></div><div class="stepper"><div class="stp done"><i>✓</i><span>Bienvenue</span></div><div class="stp done"><i>✓</i><span>Autorisations</span></div><div class="stp done"><i>✓</i><span>Usage</span></div><div class="stp on"><i>4</i><span>Votre IA</span></div><div class="stp "><i>5</i><span>Prêt</span></div></div><div class="wizbody"><div><p class="h">Raccorder une IA</p><p class="sub">Étape proposée en mode Avancé ou « Les deux ». Passez-la si vous n'utilisez pas d'IA.</p></div>
+<div class="perm"><div><b>Claude Code</b> <span class="badge ok">Détecté</span><p>Raccordement en un clic.</p></div><span class="btn sm pri">Raccorder</span></div>
+<div class="perm"><div><b>Claude Desktop</b> <span class="badge ok">Détecté</span></div><span class="btn sm">Raccorder</span></div>
+<div class="perm"><div><b>Codex, Cursor, Gemini CLI</b> <span class="badge">Non détectés</span><p>Copiez la commande à coller dans leur configuration MCP.</p></div><span class="btn sm">Copier la commande</span></div>
+<p class="t" style="font-size:13px">Vérifier que tout fonctionne</p>
+<div class="done-list"><div><i>✓</i>Serveur mTAPES actif</div><div><i>✓</i>Claude Code raccordé</div><div><span class="subtle">○</span>Prise de test de 3 s pilotée par l'IA</div><div><span class="subtle">○</span>Finition et export de test</div></div>
+<div class="row wrap"><span class="btn pri">Lancer le test</span><span class="subtle">Aucune fenêtre ne s'ouvre ; la prise de test est supprimée ensuite.</span></div></div><div class="wizfoot"><span class="btn flow">Retour</span><span class="sp"></span><span class="subtle">Passer l'assistant</span><span class="btn pri flow">Continuer</span></div></div><div class="win wiz"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Assistant de configuration</span><span class="sp"></span><span class="subtle">Étape 5 sur 5</span></div><div class="stepper"><div class="stp done"><i>✓</i><span>Bienvenue</span></div><div class="stp done"><i>✓</i><span>Autorisations</span></div><div class="stp done"><i>✓</i><span>Usage</span></div><div class="stp done"><i>✓</i><span>Votre IA</span></div><div class="stp on"><i>5</i><span>Prêt</span></div></div><div class="wizbody"><div><p class="h">Tout est prêt</p><p class="sub">Voici ce que vous avez choisi. Tout se modifie dans Réglages.</p></div>
+<div class="kv"><span>Mode</span><span>Simple et IA</span><span>Destinations</span><span>Page de présentation, Publication</span><span>Style</span><span>Sobre</span><span>Raccourci</span><span class="mono">⌘⇧5</span><span>IA raccordée</span><span>Claude Code</span></div>
+<div class="callout">Une prise d'essai de 5 secondes vous montre le résultat avant la première vraie démo.</div>
+<div class="row" style="justify-content:center"><span class="btn act flow">● Faire une prise d'essai</span></div></div><div class="wizfoot"><span class="btn flow">Retour</span><span class="sp"></span><span class="btn pri flow">Terminer</span></div></div></div>
+</section>
+<section class="screen" id="sm">
+  <h2>B · Mode Simple (débutant)</h2>
+  <p class="note">Une seule fenêtre, trois décisions : quoi filmer, quel style, Enregistrer. Tout le reste est automatique. « Retoucher » ouvre le mode Avancé sur la même prise.</p>
+  <div class="simplegrid">
+   <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl"><span class="b">m</span>TAPES</span><span class="sp"></span><div class="seg" title="Mode"><span class="on">Simple</span><span>Avancé</span></div></div>
+    <div class="main" style="padding:28px">
+      <div><p class="h">Que voulez-vous filmer ?</p></div>
+      <div class="big3"><div class="bigtile"><span class="g">▭</span>Tout l'écran</div><div class="bigtile on"><span class="g">◱</span>Une fenêtre<small>mBACKUP — Sauvegardes</small></div><div class="bigtile"><span class="g">⬚</span>Une zone<small>Je la dessine</small></div></div>
+      <div><p class="h">Quel style ?</p></div>
+      <div class="big3"><div class="bigtile on"><span class="g">◔</span>Sobre<small>Zoom doux</small></div><div class="bigtile"><span class="g">◉</span>Dynamique<small>Onde au clic</small></div><div class="bigtile"><span class="g">▯</span>Vertical<small>Pour les réseaux</small></div></div>
+      <div class="row wrap" style="justify-content:center"><span class="badge ai">✦ Montage automatique activé</span></div>
+      <span class="btn act bigcta">● Enregistrer</span>
+      <p class="subtle" style="margin:0;text-align:center">Raccourci ⌘⇧5. Zooms, curseur et vidéo légère : tout est automatique.</p>
+      <p class="muted" style="margin:0;text-align:center">Plus d'options ⌄</p>
+    </div>
+   </div>
+   <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Votre vidéo est prête</span><span class="sp"></span><div class="seg" title="Mode"><span class="on">Simple</span><span>Avancé</span></div></div>
+    <div class="main" style="padding:24px">
+      <div class="thumb g1" style="border-radius:4px"><div class="fr"></div><span class="dur">01:12</span></div>
+      <div class="done-list"><div><i>✓</i>7 zooms ajoutés</div><div><i>✓</i>38 % de temps morts retirés</div><div><i>✓</i>Curseur lissé, clics mis en valeur</div></div>
+      <div class="actbtn"><b><span class="aimark">✦</span>Améliorer le montage avec l'IA</b><span class="sp"></span><small>Gratuit · sur votre Mac</small></div>
+      <div class="actbtn pri"><b>Copier le GIF pour la page de présentation</b><span class="sp"></span><small class="num">≈ 7,8 Mo</small></div>
+      <div class="actbtn"><b>Enregistrer en MP4</b><span class="sp"></span><small class="num">≈ 14 Mo</small></div>
+      <div class="actbtn"><b>Version verticale pour les réseaux</b><span class="sp"></span><small class="num">≈ 11 Mo</small></div>
+      <div class="row wrap" style="justify-content:space-between"><span class="btn sm">Retoucher (mode Avancé)</span><span class="btn sm">Recommencer</span></div>
+    </div>
+   </div>
+  </div>
+</section>
+<section class="screen" id="sc">
+  <h2>C · Montage automatique par IA (mode Simple)</h2>
+  <p class="note">Le « must have » : un bouton, une vidéo finie. Le montage de base est instantané (règles) ; l'IA l'améliore ensuite, gratuitement et sur le Mac. Trois variantes, explications, retour arrière en un clic.</p>
+  <div class="simplegrid">
+   <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Montage automatique</span><span class="sp"></span><div class="seg"><span class="on">Simple</span><span>Avancé</span></div></div>
+    <div class="main" style="padding:24px">
+      <div><p class="h">Quelle vidéo voulez-vous ?</p><p class="sub">Répondez en un clic. Tout est facultatif.</p></div>
+      <div><p class="t" style="font-size:13px;margin-bottom:8px">Pour</p><div class="chiprow"><span class="cchip on">Présentation</span><span class="cchip">Nouvelle version</span><span class="cchip">Réseaux</span><span class="cchip">Tutoriel</span></div></div>
+      <div><p class="t" style="font-size:13px;margin-bottom:8px">Durée</p><div class="seg"><span>Auto</span><span>15 s</span><span class="on">30 s</span><span>1 min</span><span>2 min</span></div></div>
+      <div><p class="t" style="font-size:13px;margin-bottom:8px">Ton</p><div class="seg"><span class="on">Sobre</span><span>Dynamique</span><span>Pédagogique</span></div></div>
+      <div><p class="t" style="font-size:13px;margin-bottom:8px">À mettre en avant</p><div class="field" style="height:auto;min-height:36px;padding:8px 12px;white-space:normal">la sauvegarde et le résultat</div></div>
+      <div class="brief">Démo de 30 s pour la page de présentation, ton sobre, en français. Mettre en avant la sauvegarde et le résultat.<br><span class="subtle" style="font-size:12px">Votre brief, modifiable · <span class="at">Guide du brief</span></span></div>
+      <span class="btn act bigcta"><span class="aimark" style="color:inherit">✦</span> Monter automatiquement</span>
+      <p class="subtle" style="margin:0;text-align:center">Gratuit · sur votre Mac · la vidéo ne le quitte pas.<br>Moteur : Apple Intelligence (sur l'appareil)</p>
+    </div>
+   </div>
+   <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Votre montage</span><span class="sp"></span><span class="badge ok">Prêt en 6 s</span></div>
+    <div class="main" style="padding:24px">
+      <div class="varg">
+        <div class="var"><div class="thumb g2"><div class="fr"></div><span class="dur">0:20</span></div><b>Court</b>≈ 5 Mo</div>
+        <div class="var on"><div class="thumb g1"><div class="fr"></div><span class="dur">0:32</span></div><b>Équilibré</b>≈ 7,8 Mo · <span class="at">Recommandé</span></div>
+        <div class="var"><div class="thumb g3"><div class="fr"></div><span class="dur">0:55</span></div><b>Détaillé</b>≈ 13 Mo</div>
+      </div>
+      <p class="t" style="font-size:13px">Pourquoi ce montage ?</p>
+      <div class="done-list"><div><i>✓</i>4 temps morts retirés (18 s)</div><div><i>✓</i>1 essai raté écarté (0:41 à 0:47)</div><div><i>✓</i>5 textes ajoutés d'après vos clics</div><div><i>✓</i>6 zooms sur les actions importantes</div></div>
+      <div class="actbtn pri"><b>Copier le GIF pour la page de présentation</b><span class="sp"></span><small class="num">≈ 7,8 Mo</small></div>
+      <div class="actbtn"><b>Enregistrer en MP4</b><span class="sp"></span><small class="num">≈ 14 Mo</small></div>
+      <div class="row wrap" style="justify-content:space-between"><span class="btn sm">↺ Annuler le montage IA</span><span class="btn sm">Retoucher (mode Avancé)</span></div>
+      <p class="subtle" style="margin:0;font-size:12px">Aperçu instantané avec les règles, puis remplacé par le plan de l'IA dès qu'il est prêt.</p>
+    </div>
+   </div>
+  </div>
+</section>
+<section class="screen" id="sd">
+  <h2>D · Guide du brief</h2>
+  <p class="note">Le guide est dans l'appli, à un clic du brief. Il remplace le « prompt engineering » par un formulaire, des exemples à cliquer et quatre ingrédients faciles à retenir.</p>
+  <div class="win" style="max-width:1060px">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Guide du brief</span></div>
+    <div class="main"><div class="mods">
+      <div class="panel"><p class="t">Les quatre ingrédients d'un bon brief</p>
+        <div class="ing"><i>1</i><div><b>Objectif</b><p>Pour quoi : la page de présentation, une nouvelle version, les réseaux, un tutoriel.</p></div></div>
+        <div class="ing"><i>2</i><div><b>Durée</b><p>« 30 secondes ». Sans durée, l'IA choisit.</p></div></div>
+        <div class="ing"><i>3</i><div><b>Ton</b><p>Sobre, dynamique ou pédagogique.</p></div></div>
+        <div class="ing"><i>4</i><div><b>Priorité</b><p>Ce qu'il faut montrer, et ce qu'il faut ignorer.</p></div></div>
+      </div>
+      <div class="panel"><p class="t">Exemples prêts à l'emploi</p>
+        <div class="ex"><div><b>Présentation rapide</b><p>Démo de 20 s pour la page de présentation, ton sobre. Montrer surtout le résultat final.</p></div><span class="btn sm">Utiliser</span></div>
+        <div class="ex"><div><b>Nouvelle version</b><p>Présentation de 45 s des nouveautés, ton dynamique, un texte par fonction.</p></div><span class="btn sm">Utiliser</span></div>
+        <div class="ex"><div><b>Vidéo verticale</b><p>Vidéo verticale de 25 s, ton dynamique, zooms marqués, un texte court à chaque étape.</p></div><span class="btn sm">Utiliser</span></div>
+        <div class="ex"><div><b>Tutoriel</b><p>Tutoriel de 1 min 30, ton pédagogique, un chapitre par étape, ne rien accélérer.</p></div><span class="btn sm">Utiliser</span></div>
+        <div class="ex"><div><b>Sans les erreurs</b><p>Garde la version qui marche : écarte les essais ratés et les hésitations.</p></div><span class="btn sm">Utiliser</span></div>
+        <div class="ex"><div><b>En anglais</b><p>Textes en anglais, 30 s, ton sobre.</p></div><span class="btn sm">Utiliser</span></div>
+      </div>
+      <div class="panel"><p class="t">À éviter</p>
+        <div class="ing"><span class="nope">✕</span><div><b>Trop vague</b><p>« Fais joli » ne dit rien. Préférez « ton sobre, 30 s ».</p></div></div>
+        <div class="ing"><span class="nope">✕</span><div><b>Demander d'inventer</b><p>L'IA n'écrit que ce qu'elle voit dans vos clics et à l'écran.</p></div></div>
+        <div class="ing"><span class="nope">✕</span><div><b>Plusieurs objectifs à la fois</b><p>Faites un montage par objectif : les trois variantes sont gratuites.</p></div></div>
+      </div>
+      <div class="panel"><p class="t">Avec votre propre IA (MCP)</p>
+        <p class="muted" style="margin:0">Claude Code, Codex, Cursor… peuvent faire le montage eux-mêmes, avec votre abonnement.</p>
+        <div class="callout mono">Utilise mTAPES : lis le résumé de la prise avec tapes_summary, propose un plan de montage de 30 s pour la page de présentation, applique-le avec tapes_apply_plan, puis exporte avec tapes_export.</div>
+        <div class="row wrap"><span class="btn sm pri">Copier</span><span class="subtle">Le plan est vérifié par mTAPES avant d'être appliqué.</span></div>
+      </div>
+      <div class="panel"><p class="t">Ce que l'IA ne fait jamais</p>
+        <div class="done-list"><div><i>✓</i>Toucher aux pixels de votre prise</div><div><i>✓</i>Inventer un texte : les légendes viennent de vos libellés et du texte à l'écran</div><div><i>✓</i>Supprimer quoi que ce soit sans retour arrière</div><div><i>✓</i>Envoyer quoi que ce soit hors du Mac sans votre accord</div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+<section class="screen" id="sab">
+  <h2>E · Fenêtre « À propos »</h2>
+  <p class="note">Modèle Socle (356 px, marges de 28) : icône, nom, version lue dans l'appli, description, appartenance à la collection <b>DESKTOP MAC TOOLKIT</b>, auteurs, licence, avertissement. Français et italien (la langue la plus longue) pour contrôler les retours à la ligne.</p>
+  <div class="aboutgrid"><div class="about"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl" style="font-size:13px">À propos de mTAPES</span></div>
+<div class="abody"><div class="aicon"><svg width="56" height="35" style="color:#fff"><use href="#tape"/></svg></div>
+<div class="aname"><span class="b">m</span>TAPES</div><div class="aver">Version 0.1.0 (1)</div>
+<div class="adesc">Enregistre votre écran et monte vos démos automatiquement, à la main ou par une IA.</div>
+<div class="amut">Fait partie du<br><span class="acoll">DESKTOP MAC TOOLKIT</span></div>
+<div class="aauth">Starbudweiser &amp; Claude Code (Anthropic)</div>
+<div>Licence MIT. © 2026 Starbudweiser.</div><div class="amut">Fourni en l'état, sans garantie.</div></div></div><div class="about"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl" style="font-size:13px">Informazioni su mTAPES</span></div>
+<div class="abody"><div class="aicon"><svg width="56" height="35" style="color:#fff"><use href="#tape"/></svg></div>
+<div class="aname"><span class="b">m</span>TAPES</div><div class="aver">Versione 0.1.0 (1)</div>
+<div class="adesc">Registra lo schermo e monta automaticamente le tue demo, a mano o tramite un'IA.</div>
+<div class="amut">Fa parte del<br><span class="acoll">DESKTOP MAC TOOLKIT</span></div>
+<div class="aauth">Starbudweiser &amp; Claude Code (Anthropic)</div>
+<div>Licenza MIT. © 2026 Starbudweiser.</div><div class="amut">Fornito così com'è, senza garanzie.</div></div></div></div>
+</section>
+<section class="screen" id="s1">
+  <h2>1 · Mode Avancé — Bibliothèque des prises</h2>
+  <p class="note">Les deux usages arrivent au même endroit : les prises faites à la main et celles qu'une IA a pilotées par MCP (badge « IA »). La fenêtre ne s'ouvre jamais seule pendant une prise pilotée.</p>
+  <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl"><span class="b">m</span>TAPES</span><span class="sp"></span><div class="field search">Rechercher une prise</div><div class="seg" title="Mode"><span>Simple</span><span class="on">Avancé</span></div><span class="btn act rec-btn"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="currentColor"/></svg>Enregistrer<span class="kb">⌘⇧5</span></span></div>
+    <div class="cols">
+      <aside class="side">
+        <svg class="wm" viewBox="0 0 64 40"><use href="#tape"/></svg>
+        <h4>Prises</h4>
+        <div class="navi sel">Toutes les prises <span class="cnt">14</span></div>
+        <div class="navi">Enregistrées à la main <span class="cnt">6</span></div>
+        <div class="navi">Pilotées par une IA <span class="cnt">8</span></div>
+        <div class="navi">Exports <span class="cnt">21</span></div>
+        <h4>Pilotage IA</h4>
+        <div class="navi">Clients MCP <span class="dot"></span></div>
+        <div class="navi">Journal des commandes</div>
+        <h4>Finition</h4>
+        <div class="navi">Préréglages <span class="cnt">5</span></div>
+        <div class="grow"></div>
+      </aside>
+      <main class="main">
+        <div class="row"><div><p class="h">Toutes les prises</p><p class="sub">Une prise brute reste intacte ; la finition est un calque qu'on refait à volonté.</p></div><span class="sp"></span><div class="seg"><span class="on">Récentes</span><span>Nom</span><span>Durée</span></div></div>
+        <div class="grid">
+          <div class="card sel"><div class="thumb g1"><div class="fr"></div><span class="who badge ai">IA · Claude Code</span><span class="dur">01:12</span></div><div class="meta"><div class="nm">mBACKUP — première sauvegarde</div><div class="row" style="margin-top:6px"><span class="badge ok">Finie</span><span class="subtle">aujourd'hui, 10:42</span></div></div></div>
+          <div class="card"><div class="thumb g2"><div class="fr"></div><span class="who badge ai">IA · Codex</span><span class="dur">00:48</span></div><div class="meta"><div class="nm">mLINKS — ajout d'un raccourci</div><div class="row" style="margin-top:6px"><span class="badge warn">Rendu en file</span><span class="subtle">aujourd'hui, 10:15</span></div></div></div>
+          <div class="card"><div class="thumb g3"><div class="fr"></div><span class="dur">02:31</span></div><div class="meta"><div class="nm">mORTEX — installer une collection</div><div class="row" style="margin-top:6px"><span class="badge">Brute</span><span class="subtle">hier, 18:02</span></div></div></div>
+          <div class="card"><div class="thumb g5"><div class="fr"></div><span class="who badge ai">IA · Claude Code</span><span class="dur">00:34</span></div><div class="meta"><div class="nm">sKYCRASH — lecture d'un rapport</div><div class="row" style="margin-top:6px"><span class="badge ok">Finie</span><span class="subtle">hier, 16:40</span></div></div></div>
+          <div class="card"><div class="thumb g4"><div class="fr"></div><span class="dur">00:19</span></div><div class="meta"><div class="nm">Réglages de hERALD</div><div class="row" style="margin-top:6px"><span class="badge ok">Finie</span><span class="subtle">12/11</span></div></div></div>
+          <div class="card"><div class="thumb g1"><div class="fr"></div><span class="who badge ai">IA · Cursor</span><span class="dur">01:05</span></div><div class="meta"><div class="nm">SOCiALS — ajout d'un service</div><div class="row" style="margin-top:6px"><span class="badge">Brute</span><span class="subtle">12/11</span></div></div></div>
+        </div>
+      </main>
+      <aside class="detail">
+        <div class="thumb g1" style="border-radius:4px"><div class="fr"></div><span class="dur">01:12</span></div>
+        <div><p class="t">mBACKUP — première sauvegarde</p><p class="sub">Pilotée par Claude Code, 11 actions marquées.</p></div>
+        <div class="kv">
+          <span>Source</span><span>Fenêtre de mBACKUP.dev</span>
+          <span>Brut</span><span class="num">2560 × 1600, 60 i/s, 01:58</span>
+          <span>Après finition</span><span class="num at">01:12 (−39 %)</span>
+          <span>Zooms</span><span class="num">7 automatiques</span>
+          <span>Clics</span><span class="num">11 (journal de l'IA)</span>
+        </div>
+        <div class="hr"></div>
+        <p class="t" style="font-size:13px">Exports</p>
+        <div class="row"><span class="badge">GIF</span><span class="mono">readme_960.gif</span><span class="sp"></span><span class="subtle num">7,8 Mo</span></div>
+        <div class="row"><span class="badge">MP4</span><span class="mono">release_1080p.mp4</span><span class="sp"></span><span class="subtle num">14 Mo</span></div>
+        <div class="row"><span class="badge">MP4</span><span class="mono">short_9x16.mp4</span><span class="sp"></span><span class="subtle num">11 Mo</span></div>
+        <div class="grow" style="flex:1"></div>
+        <div class="row" style="justify-content:center"><span class="btn">Afficher dans le Finder</span><span class="btn pri">Ouvrir la finition</span></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 ENREGISTRER À LA MAIN ============ -->
+<section class="screen" id="s2">
+  <h2>2 · Enregistrer à la main</h2>
+  <p class="note">Depuis l'icône de la barre de menus ou ⌘⇧5 : choisir écran, fenêtre, zone ou application, puis enregistrer. Les clics réels sont détectés et produisent les zooms automatiques.</p>
+  <div class="desk">
+    <div class="menubar"><span>Finder</span><span>Fichier</span><span>Édition</span><span class="sp"></span><span class="mbi press"><svg width="20" height="13" style="color:var(--brand)"><use href="#tape"/></svg></span><span>sam. 15 nov. 11:04</span></div>
+    <div class="deskbody">
+      <div class="pop">
+        <div><p class="t">Nouvel enregistrement</p><p class="sub">Choisissez ce qui sera filmé.</p></div>
+        <div class="src"><div>▭<span>Écran</span></div><div class="on">◱<span>Fenêtre</span></div><div>⬚<span>Zone</span></div><div>◎<span>Appli</span></div></div>
+        <div class="field" style="justify-content:space-between">mBACKUP — Sauvegardes <span class="subtle">⌄</span></div>
+        <div class="set"><div>Style</div><div class="field" style="height:32px;width:150px;justify-content:space-between">Sobre<span class="subtle">⌄</span></div></div>
+        <div class="set"><div>Micro</div><div class="toggle"></div></div>
+        <div class="set"><div>Son du Mac</div><div class="toggle"></div></div>
+        <div class="set"><div>Compte à rebours de 3 s</div><div class="toggle on"></div></div>
+        <div class="row" style="justify-content:center;margin-top:4px"><span class="btn act flow">● Enregistrer</span></div>
+        <p class="subtle" style="margin:0;text-align:center;font-size:12px">Même cachée derrière d'autres fenêtres, la fenêtre choisie est filmée.</p>
+      </div>
+      <div class="target"><span class="lbl">Fenêtre · mBACKUP · 1240 × 800</span><div class="fakeapp"><div class="tb"><i></i><i></i><i></i><span class="subtle" style="margin-left:8px;font-size:12px">mBACKUP</span></div></div></div>
+    </div>
+    <div class="hudrow"><div class="hud"><span class="rec">● 00:42</span><span class="subtle">Fenêtre · mBACKUP</span><span class="btn sm">Pause</span><span class="btn sm">Marquer ⌘⇧M</span><span class="btn sm pri">Arrêter ⌘⇧5</span></div></div>
+  </div>
+  <div class="desk">
+    <div class="menubar"><span>Mail</span><span class="sp"></span><span class="mbi press"><svg width="20" height="13" style="color:var(--brand)"><use href="#tape"/></svg><span class="rec">00:42</span></span><span>sam. 15 nov. 11:05</span></div>
+    <div class="menuwrap">
+      <p class="muted" style="margin:0;flex:1 1 280px;max-width:560px">Pendant une prise, le menu de l'icône propose d'arrêter, de mettre en pause ou de marquer un chapitre. Le panneau de commande peut se masquer (préférence) : seul le compteur rouge reste dans la barre de menus. Aucun nom coloré dans le menu, conformément à Socle.</p>
+      <div class="menu">
+        <div class="hd">Enregistrement en cours · fenêtre mBACKUP</div>
+        <div class="mi hl">Arrêter et finir <kbd>⌘⇧5</kbd></div>
+        <div class="mi">Mettre en pause</div>
+        <div class="mi">Marquer un chapitre <kbd>⌘⇧M</kbd></div>
+        <div class="mi">Annuler la prise</div>
+        <div class="sep"></div>
+        <div class="mi">Ouvrir mTAPES</div>
+        <div class="mi">À propos de mTAPES</div>
+        <div class="mi">Quitter mTAPES <kbd>⌘Q</kbd></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 FINITION ============ -->
+<section class="screen" id="s3">
+  <h2>3 · Finition</h2>
+  <p class="note">La mise en scène est générée d'office (zooms, temps morts accélérés, curseur lissé, cadre) puis se retouche bloc par bloc. Les points bleus sont les actions annoncées par l'IA, les gris les clics détectés.</p>
+  <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">mBACKUP — première sauvegarde</span><span class="sp"></span><div class="seg"><span class="on">16:9</span><span>9:16</span><span>1:1</span></div><span class="btn">Refaire la mise en scène</span><span class="btn pri">Exporter…</span></div>
+    <div class="cols fin">
+      <div style="min-width:0;display:flex;flex-direction:column">
+        <div class="stage">
+          <div class="canvas"><div class="shot"><div class="tb"></div></div><div class="zoomrect"></div>
+            <div class="ripple"></div>
+            <svg class="cur" viewBox="0 0 16 22"><path d="M1 1 L1 17 L5 13 L8 20 L11 19 L8 12 L14 12 Z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg>
+          </div>
+        </div>
+        <div class="row" style="padding:8px 16px;border-top:1px solid var(--border);background:var(--surface-raised)"><span class="btn sm">◀◀</span><span class="btn sm">▶</span><span class="mono num">00:27,4 / 01:12,0</span><span class="sp"></span><span class="subtle">Aperçu temps réel · Metal</span></div>
+        <div class="tl">
+          <div class="ruler"><span>0:00</span><span>0:10</span><span>0:20</span><span>0:30</span><span>0:40</span><span>0:50</span><span>1:00</span><span>1:12</span></div>
+          <div class="track"><span>Vidéo</span><div class="lane"><div class="seg2 s-vid" style="left:0;width:18%">Ouverture</div><div class="seg2 s-fast" style="left:18%;width:9%">×4</div><div class="seg2 s-vid" style="left:27%;width:40%">Réglages</div><div class="seg2 s-fast" style="left:67%;width:8%">×4</div><div class="seg2 s-vid" style="left:75%;width:25%">Résultat</div><div class="playhead"></div></div></div>
+          <div class="track"><span>Zooms</span><div class="lane"><div class="seg2 s-zoom" style="left:6%;width:9%">1,6×</div><div class="seg2 s-zoom sel" style="left:31%;width:12%">1,8×</div><div class="seg2 s-zoom" style="left:48%;width:10%">2,0×</div><div class="seg2 s-zoom" style="left:78%;width:14%">1,5×</div></div></div>
+          <div class="track"><span>Actions</span><div class="lane"><i class="clk ai" style="left:8%"></i><i class="clk ai" style="left:12%"></i><i class="clk ai" style="left:33%"></i><i class="clk ai" style="left:37%"></i><i class="clk" style="left:40%"></i><i class="clk ai" style="left:51%"></i><i class="clk ai" style="left:55%"></i><i class="clk ai" style="left:80%"></i><i class="clk ai" style="left:86%"></i></div></div>
+          <div class="track"><span>Textes</span><div class="lane"><div class="seg2 s-txt" style="left:2%;width:14%">Texte</div><div class="seg2 s-txt" style="left:76%;width:18%">Texte</div></div></div>
+        </div>
+      </div>
+      <aside class="detail">
+        <div><p class="t">Zoom 2 · 00:22 → 00:31</p><p class="sub">Créé d'après 3 actions rapprochées.</p></div>
+        <div class="set"><div>Grossissement</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">1,8×</div></div>
+        <div class="set"><div>Entrée / sortie</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">0,45 s</div></div>
+        <div class="set"><div>Suivre le curseur<small>La caméra glisse avec lui dans la zone</small></div><div class="toggle on"></div></div>
+        <div class="hr"></div>
+        <p class="t" style="font-size:13px">Curseur</p>
+        <div class="set"><div>Lissage</div><div class="seg"><span>Léger</span><span class="on">Moyen</span><span>Fort</span></div></div>
+        <div class="set"><div>Taille</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">150 %</div></div>
+        <div class="set"><div>Onde au clic</div><div class="toggle on"></div></div>
+        <div class="hr"></div>
+        <p class="t" style="font-size:13px">Cadre</p>
+        <div class="set"><div>Fond</div><div class="row"><i style="width:22px;height:22px;border-radius:4px;background:linear-gradient(135deg,#3b2a6b,#1f4f7a);outline:2px solid var(--accent)"></i><i style="width:22px;height:22px;border-radius:4px;background:#1e1e1e"></i><i style="width:22px;height:22px;border-radius:4px;background:linear-gradient(135deg,#7a2a3f,#3b2a6b)"></i><span class="btn sm">Image…</span></div></div>
+        <div class="set"><div>Marge, arrondi</div><span class="at num">8 % · 12 px</span></div>
+        <div class="set"><div>Ombre de la fenêtre</div><div class="toggle on"></div></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 EXPORT ============ -->
+<section class="screen" id="sia">
+  <h2>4 · Mode Avancé — Montage IA</h2>
+  <p class="note">Le plan de l'IA devient des blocs ✦ sur la ligne de temps, tous modifiables. Chaque décision s'explique et s'annule séparément.</p>
+  <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">mBACKUP — première sauvegarde</span><span class="sp"></span><div class="seg"><span>Court 0:20</span><span class="on">Équilibré 0:32</span><span>Détaillé 0:55</span></div><span class="btn pri">Exporter…</span></div>
+    <div class="cols fin">
+      <div style="min-width:0;display:flex;flex-direction:column">
+        <div class="stage"><div class="canvas"><div class="shot"><div class="tb"></div></div><div class="zoomrect"></div><div class="ripple"></div></div></div>
+        <div class="tl">
+          <div class="ruler"><span>0:00</span><span>0:10</span><span>0:20</span><span>0:30</span></div>
+          <div class="track"><span>Vidéo</span><div class="lane"><div class="seg2 s-vid" style="left:0;width:22%">Ouverture</div><div class="seg2 s-fast" style="left:22%;width:12%">✂ 9 s</div><div class="seg2 s-vid" style="left:34%;width:30%">Réglages</div><div class="seg2 s-fast" style="left:64%;width:8%">✂ 6 s</div><div class="seg2 s-vid" style="left:72%;width:28%">Résultat</div></div></div>
+          <div class="track"><span>Zooms</span><div class="lane"><div class="seg2 s-zoom" style="left:8%;width:12%"><span class="aimark">✦</span>1,6×</div><div class="seg2 s-zoom" style="left:38%;width:14%"><span class="aimark">✦</span>1,8×</div><div class="seg2 s-zoom" style="left:76%;width:16%"><span class="aimark">✦</span>1,5×</div></div></div>
+          <div class="track"><span>Textes</span><div class="lane"><div class="seg2 s-txt" style="left:4%;width:16%"><span class="aimark">✦</span>Texte</div><div class="seg2 s-txt" style="left:40%;width:16%"><span class="aimark">✦</span>Texte</div><div class="seg2 s-txt" style="left:78%;width:16%"><span class="aimark">✦</span>Texte</div></div></div>
+        </div>
+      </div>
+      <aside class="detail">
+        <div><p class="t"><span class="aimark">✦</span>Plan de montage</p><p class="sub">Moteur : Apple Intelligence · sur l'appareil</p></div>
+        <div class="brief" style="font-size:12px">Démo de 30 s pour la page de présentation, ton sobre. Mettre en avant la sauvegarde et le résultat.</div>
+        <div class="row wrap"><span class="btn sm">Modifier le brief</span><span class="btn sm pri">Régénérer</span></div>
+        <div class="hr"></div>
+        <div class="set"><div>Couper 0:12 → 0:21<small>Temps mort de 9 s, aucune action</small></div><div class="toggle on"></div></div>
+        <div class="set"><div>Écarter 0:41 → 0:47<small>Essai raté : le dossier est retapé</small></div><div class="toggle on"></div></div>
+        <div class="set"><div>Zoom 1,8× à 0:22<small>Clic sur « Choisir un dossier »</small></div><div class="toggle on"></div></div>
+        <div class="set"><div>Texte « Choisir un dossier »<small>Tiré du libellé de votre clic</small></div><div class="toggle on"></div></div>
+        <div class="set"><div>Carte titre<small>« Sauvegarder avec mBACKUP » · proposée</small></div><div class="toggle"></div></div>
+        <p class="muted" style="margin:0;font-size:12px">Désactiver une décision la retire du montage ; le reste est conservé.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+<section class="screen" id="s4">
+  <h2>5 · Export</h2>
+  <p class="note">Une destination = un préréglage. Plusieurs se cochent d'un coup ; les rendus passent un par un par la file calcul-lourd.</p>
+  <div class="win" style="max-width:900px">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Exporter « mBACKUP — première sauvegarde »</span></div>
+    <div class="main" style="padding:24px">
+      <div class="dests">
+        <div class="dest on"><div class="row"><div class="check on"></div><b class="t" style="font-size:13px">README GitHub</b></div><div class="ratio"><i style="width:96px;height:54px"></i></div><div class="kv" style="grid-template-columns:90px 1fr"><span>Format</span><span>GIF 16:9</span><span>Taille</span><span class="num">960 px, 15 i/s</span><span>Limite</span><span class="num at">≤ 10 Mo</span><span>Estimé</span><span class="num at">≈ 7,8 Mo</span></div></div>
+        <div class="dest on"><div class="row"><div class="check on"></div><b class="t" style="font-size:13px">Release GitHub</b></div><div class="ratio"><i style="width:96px;height:54px"></i></div><div class="kv" style="grid-template-columns:90px 1fr"><span>Format</span><span>MP4 H.264 16:9</span><span>Taille</span><span class="num">1920 × 1080, 60 i/s</span><span>Son</span><span>Aucun</span><span>Estimé</span><span class="num at">≈ 14 Mo</span></div></div>
+        <div class="dest"><div class="row"><div class="check"></div><b class="t" style="font-size:13px">Short / Reel</b></div><div class="ratio"><i style="width:34px;height:60px"></i></div><div class="kv" style="grid-template-columns:90px 1fr"><span>Format</span><span>MP4 HEVC 9:16</span><span>Taille</span><span class="num">1080 × 1920, 30 i/s</span><span>Cadrage</span><span>Suit l'action</span><span>Estimé</span><span class="num at">≈ 11 Mo</span></div></div>
+      </div>
+      <div class="set"><div>Dossier<small class="mono">~/Movies/mTAPES/mBACKUP/</small></div><span class="btn">Choisir…</span></div>
+      <div class="set"><div>Réduire automatiquement pour tenir sous la limite<small>Deux passes ; la qualité visuelle est contrôlée sur des images témoins</small></div><div class="toggle on"></div></div><div class="panel" style="padding:16px 20px">
+        <div class="queue">
+          <div class="row"><b class="t" style="font-size:13px">File de rendu</b><span class="sp"></span><span class="subtle">calcul-lourd · un rendu à la fois sur ce Mac</span></div>
+          <div class="row"><span class="mono" style="width:190px">readme_960.gif</span><div class="bar" style="flex:1"><i style="width:64%"></i></div><span class="num at" style="width:52px;text-align:right">64 %</span></div>
+          <div class="row"><span class="mono" style="width:190px">release_1080p.mp4</span><div class="bar" style="flex:1"><i style="width:0"></i></div><span class="muted" style="width:52px;text-align:right">attente</span></div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end"><span class="btn">Annuler</span><span class="btn act flow">Exporter 2 fichiers</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 PILOTAGE IA ============ -->
+<section class="screen" id="s5">
+  <h2>6 · Mode Avancé — Pilotage IA (MCP)</h2>
+  <p class="note">Serveur MCP standard, ouvert à toute IA : Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI… Chaque client se raccorde en un clic ou par la commande fournie.</p>
+  <div class="win">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl"><span class="b">m</span>TAPES</span><span class="sp"></span><div class="seg" title="Mode"><span>Simple</span><span class="on">Avancé</span></div><span class="btn act rec-btn"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="currentColor"/></svg>Enregistrer<span class="kb">⌘⇧5</span></span></div>
+    <div class="cols two">
+      <aside class="side">
+        <svg class="wm" viewBox="0 0 64 40"><use href="#tape"/></svg>
+        <h4>Prises</h4>
+        <div class="navi">Toutes les prises <span class="cnt">14</span></div>
+        <div class="navi">Enregistrées à la main <span class="cnt">6</span></div>
+        <div class="navi">Pilotées par une IA <span class="cnt">8</span></div>
+        <div class="navi">Exports <span class="cnt">21</span></div>
+        <h4>Pilotage IA</h4>
+        <div class="navi sel">Clients MCP <span class="dot"></span></div>
+        <div class="navi">Journal des commandes</div>
+        <h4>Finition</h4>
+        <div class="navi">Préréglages <span class="cnt">5</span></div>
+        <div class="grow"></div>
+      </aside>
+      <main class="main">
+        <div class="row"><div><p class="h">Clients MCP</p><p class="sub">Le serveur tourne dès que mTAPES est ouvert ; il n'affiche jamais de fenêtre pendant une prise.</p></div><span class="sp"></span><div class="row"><span class="badge ok">● Serveur actif</span></div></div>
+        <div class="clients">
+          <div class="client"><div class="row"><span class="mono-tile" style="background:#c96442">C</span><div><b style="color:var(--text-strong)">Claude Code</b><div class="subtle" style="font-size:12px">stdio · installé</div></div><span class="sp"></span><span class="badge ok">Raccordé</span></div><p class="muted" style="margin:0">Dernière prise il y a 20 min, 11 actions marquées.</p><div class="row" style="justify-content:center"><span class="btn sm">Retirer</span></div></div>
+          <div class="client"><div class="row"><span class="mono-tile" style="background:#10a37f">O</span><div><b style="color:var(--text-strong)">Codex</b><div class="subtle" style="font-size:12px">stdio · installé</div></div><span class="sp"></span><span class="badge ok">Raccordé</span></div><p class="muted" style="margin:0">Dernière prise ce matin, rendu en file.</p><div class="row" style="justify-content:center"><span class="btn sm">Retirer</span></div></div>
+          <div class="client"><div class="row"><span class="mono-tile" style="background:#555">Cu</span><div><b style="color:var(--text-strong)">Cursor</b><div class="subtle" style="font-size:12px">non raccordé</div></div><span class="sp"></span><span class="badge">—</span></div><p class="muted" style="margin:0">Ajoute mTAPES à sa configuration MCP.</p><div class="row" style="justify-content:center"><span class="btn sm pri">Raccorder</span></div></div>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+          <div class="row"><b class="t">Autre client</b><span class="sp"></span><div class="seg"><span class="on">stdio</span><span>HTTP local</span></div></div>
+          <div class="field mono wrap">/Applications/…/mTAPES.app/Contents/MacOS/mtapes-mcp <span class="btn sm">Copier</span></div>
+          <p class="muted" style="margin:0">HTTP local : <span class="mono at">http://127.0.0.1:47321/mcp</span>, jeton exigé, jamais exposé au réseau.</p>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+ <div class="row wrap"><b class="t">Demander à votre IA</b><span class="sp"></span><span class="btn sm">Copier</span></div>
+ <div class="callout mono">Utilise mTAPES pour enregistrer une démo de mBACKUP : filme la fenêtre, annonce chaque clic avec tapes_mark, puis exporte le GIF du README et le MP4 de la release.</div>
+ <div class="row wrap"><span class="btn sm pri">Tester la connexion</span><span class="btn sm">Relancer l'assistant IA</span><span class="subtle">Prise de test de 3 s, supprimée ensuite</span></div>
+</div>
+<div class="panel" style="display:flex;flex-direction:column;gap:10px">
+          <div class="row"><b class="t">Session en cours · Claude Code</b><span class="sp"></span><span class="rec">● 00:31</span></div>
+          <div class="log">
+            <div><span class="tm">10:41:02</span> <span class="fn">tapes_start</span>(target: window "mBACKUP.dev", preset: "readme") <span class="ok">→ tape_0142</span></div>
+            <div><span class="tm">10:41:05</span> <span class="fn">tapes_mark</span>(click, 412, 188, "Choisir un dossier")</div>
+            <div><span class="tm">10:41:09</span> <span class="fn">tapes_mark</span>(type, 380, 240, "Nom de la sauvegarde")</div>
+            <div><span class="tm">10:41:14</span> <span class="fn">tapes_mark</span>(chapter, "Lancement")</div>
+            <div><span class="tm">10:41:15</span> <span class="fn">tapes_mark</span>(click, 640, 512, "Sauvegarder")</div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="s6">
+  <h2>7 · Réglages — Capture</h2>
+  <p class="note">Cible par défaut (écran, fenêtre, zone ou application), zones enregistrées, exclusions de l'image. Même cible que celle qu'une IA peut demander par MCP.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="">Général</span><span class="on">Capture</span><span class="">Qualité</span><span class="">Montage IA</span><span class="">Zoom</span><span class="">Clics et curseur</span><span class="">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Cible par défaut</p><p class="sub" style="margin-top:-6px">Reprise à chaque prise ; une IA peut en choisir une autre.</p>
+ <div class="src"><div>▭<span>Écran</span></div><div class="on">◱<span>Fenêtre</span></div><div>⬚<span>Zone</span></div><div>◎<span>Application</span></div></div>
+ <div class="set"><div>Écran</div><div class="field" style="height:32px;width:220px;justify-content:space-between">Écran principal · 2560 × 1600<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Demander la cible à chaque prise<small>Sinon, la dernière cible est reprise</small></div><div class="toggle"></div></div>
+</div>
+<div class="panel"><p class="t">Zone</p>
+ <div class="scr"><div class="w" style="left:6%;top:10%;width:46%;height:60%"></div><div class="w" style="left:40%;top:30%;width:50%;height:58%"></div>
+  <div class="z" style="left:12%;top:18%;width:66%;height:62%"><b style="left:-5px;top:-5px"></b><b style="right:-5px;top:-5px"></b><b style="left:-5px;bottom:-5px"></b><b style="right:-5px;bottom:-5px"></b></div><div class="zl" style="left:12%;top:8%">1280 × 720 · 16:9</div></div>
+ <div class="row"><span class="btn pri">Dessiner une zone</span><span class="btn">Choisir au pointeur</span></div>
+ <div class="set"><div>Proportions<small>Verrouille le ratio pendant le tracé</small></div><div class="seg"><span class="">Libre</span><span class="on">16:9</span><span class="">9:16</span><span class="">1:1</span></div></div>
+ <div class="set"><div>Taille fixe<small>Pour des prises toujours identiques</small></div><div class="row"><div class="field num" style="height:32px;width:68px;color:var(--accent-text)">1280</div><span class="subtle">×</span><div class="field num" style="height:32px;width:68px;color:var(--accent-text)">720</div></div></div>
+ <div class="set"><div>Aimanter aux bords des fenêtres</div><div class="toggle on"></div></div>
+ <div class="set"><div>Afficher la grille de tiers pendant le tracé</div><div class="toggle"></div></div>
+ <p class="t" style="font-size:13px;margin-top:4px">Zones enregistrées</p>
+ <div class="zl2"><div class="zcard on"><b>README · 16:9</b><span class="subtle num">1280 × 720 · écran 1</span></div><div class="zcard"><b>Short · 9:16</b><span class="subtle num">608 × 1080 · écran 1</span></div><div class="zcard"><b>Barre de menus</b><span class="subtle num">2560 × 52 · écran 1</span></div><div class="zcard"><b>+ Enregistrer la zone</b><span class="subtle">Nom, raccourci</span></div></div>
+</div>
+<div class="panel"><p class="t">Fenêtre</p>
+ <div class="set"><div>Fenêtre</div><div class="field" style="height:32px;width:220px;justify-content:space-between">mBACKUP — Sauvegardes<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Filmer même masquée par d'autres fenêtres<small>Capture directe de la fenêtre, sans le reste du bureau</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Suivre la fenêtre quand elle bouge ou change de taille</div><div class="toggle on"></div></div>
+ <div class="set"><div>Inclure l'ombre de la fenêtre</div><div class="toggle"></div></div>
+ <div class="set"><div>Inclure ses fenêtres filles<small>Feuilles, menus, panneaux ouverts par l'appli</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Taille de sortie<small>Un cadre fixe centre la fenêtre sur le fond</small></div><div class="seg"><span class="on">Fenêtre</span><span class="">1920 × 1080</span><span class="">Cadre fixe</span></div></div>
+</div>
+<div class="panel"><p class="t">Application</p>
+ <div class="set"><div>Application</div><div class="field" style="height:32px;width:220px;justify-content:space-between">mBACKUP.dev · 2 fenêtres<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Fenêtres filmées<small>« Toutes » compose les fenêtres sur le fond</small></div><div class="seg"><span class="">Active</span><span class="on">Toutes</span><span class="">Choisies</span></div></div>
+ <div class="set"><div>Basculer sur la fenêtre où se passe l'action</div><div class="toggle on"></div></div>
+ <p class="t" style="font-size:13px;margin-top:4px">Toujours exclus de l'image</p>
+ <div class="chips"><span class="chip">mTAPES<u>🔒</u></span><span class="chip">1Password<u>✕</u></span><span class="chip">Messages<u>✕</u></span><span class="chip">Notifications<u>✕</u></span><span class="chip">+ Ajouter</span></div>
+ <div class="set"><div>Masquer les icônes du bureau</div><div class="toggle on"></div></div>
+ <div class="set"><div>Masquer le Dock et la barre de menus</div><div class="toggle"></div></div>
+</div>
+<div class="panel"><p class="t">Son et entrée</p>
+ <div class="set"><div>Micro</div><div class="field" style="height:32px;width:220px;justify-content:space-between">Aucun<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Son du Mac</div><div class="toggle"></div></div>
+ <div class="set"><div>Compte à rebours avant la prise</div><div class="toggle on"></div></div>
+ <div class="set"><div>Durée du compte à rebours</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">3 s</div></div>
+ <div class="set"><div>Afficher les touches frappées<small>Pastille ⌘C à l'écran, utile pour les tutoriels</small></div><div class="toggle"></div></div>
+</div>
+</div></div></div>
+</section>
+<section class="screen" id="sq">
+  <h2>8 · Réglages — Qualité et poids</h2>
+  <p class="note">Le moteur : un profil en un clic, puis le détail. Images adaptatives, encodage matériel, fichiers légers, mesures réelles après chaque prise.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="">Général</span><span class="">Capture</span><span class="on">Qualité</span><span class="">Montage IA</span><span class="">Zoom</span><span class="">Clics et curseur</span><span class="">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Profil d'enregistrement</p><p class="sub" style="margin-top:-6px">Un seul choix règle le moteur ; tout reste modifiable.</p>
+ <div class="pfgrid"><div class="pf"><b>Léger</b><span class="n">≈ 6 Mo/min</span>Démos de README, interface calme</div><div class="pf on"><b>Équilibré</b><span class="n">≈ 14 Mo/min</span>Recommandé pour tout</div><div class="pf"><b>Maximal</b><span class="n">≈ 45 Mo/min</span>Zoom très fort, archive</div><div class="pf"><b>Sur mesure</b><span class="n">—</span>Réglages ci-dessous</div></div>
+ <p class="muted" style="margin:0;font-size:12px">Poids d'exemple (écran 2560 × 1600, interface peu animée). Après chaque prise, l'appli affiche la mesure réelle.</p>
+</div>
+<div class="panel"><p class="t">Moteur de capture</p>
+ <div class="set"><div>Résolution</div><div class="field" style="height:32px;width:220px;justify-content:space-between">Native (recommandé)<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Images par seconde<small>Adaptatif : seules les images qui changent sont gardées</small></div><div class="seg"><span class="on">Adaptatif</span><span class="">30</span><span class="">60</span></div></div>
+ <div class="set"><div>Format du brut</div><div class="field" style="height:32px;width:220px;justify-content:space-between">HEVC 10 bits matériel<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Qualité constante<small>Plus haut : plus net et plus lourd</small></div><div class="sl"><div class="tr"><i style="width:72%"></i><b style="left:72%"></b></div><span class="v">72 %</span></div></div>
+ <div class="set"><div>Image clé chaque seconde<small>Lecture et défilement fluides dans la finition</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Récupérer une prise après un plantage<small>Fichier écrit par fragments de 2 s</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Priorité</div><div class="seg"><span class="">Léger pour le Mac</span><span class="on">Équilibrée</span><span class="">Zéro image perdue</span></div></div>
+ <div class="set"><div>Encodeur matériel HEVC</div><span class="badge ok">✓ Disponible</span></div>
+</div>
+<div class="panel"><p class="t">Export léger</p>
+ <div class="set"><div>Taille cible du GIF</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">10 Mo</div></div>
+ <div class="set"><div>Viser la taille cible en deux passes</div><div class="toggle on"></div></div>
+ <div class="set"><div>Format vidéo<small>H.264 est lu partout ; HEVC est plus léger à qualité égale</small></div><div class="seg"><span class="on">H.264</span><span class="">HEVC</span></div></div>
+ <div class="set"><div>Supprimer les images dupliquées</div><div class="toggle on"></div></div>
+ <div class="set"><div>GIF optimisé<small>Palette adaptative, images différentielles</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Proposer aussi le WebP animé</div><div class="toggle"></div></div>
+ <div class="set"><div>Débit maximal du MP4</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">8 Mb/s</div></div>
+</div>
+<div class="panel"><p class="t">Dernière prise · mesures (exemple)</p>
+ <div class="kv" style="grid-template-columns:160px 1fr"><span>Processeur moyen</span><span class="num at">3 %</span><span>Images perdues</span><span class="num at">0</span><span>Débit moyen</span><span class="num at">6,2 Mb/s</span><span>Poids</span><span class="num at">14 Mo par minute</span><span>Démarrage</span><span class="num at">0,4 s</span><span>Arrêt jusqu'à l'aperçu</span><span class="num at">1,1 s</span></div>
+ <svg viewBox="0 0 300 50" style="width:100%;height:50px"><path d="M0 44 L30 40 L60 43 L90 36 L120 41 L150 38 L180 42 L210 35 L240 40 L270 41 L300 39" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+ <p class="muted" style="margin:0;font-size:12px">Charge du processeur pendant la prise. Valeurs fictives dans la maquette.</p>
+</div>
+</div></div></div>
+</section>
+<section class="screen" id="sai">
+  <h2>9 · Réglages — Montage IA</h2>
+  <p class="note">Un moteur gratuit et privé par défaut, des moteurs en ligne seulement si vous les ajoutez, et toujours un repli par règles. Ce qui est envoyé reste visible.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="">Général</span><span class="">Capture</span><span class="">Qualité</span><span class="on">Montage IA</span><span class="">Zoom</span><span class="">Clics et curseur</span><span class="">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Moteur</p><p class="sub" style="margin-top:-6px">Automatique : le premier disponible, dans l'ordre ci-dessous.</p>
+ <div class="set"><div>Choix</div><div class="seg"><span class="on">Automatique</span><span class="">Je choisis</span></div></div>
+ <div class="perm"><div class="row wrap" style="gap:10px"><i class="rad on"></i><div style="flex:1 1 180px"><b>Apple Intelligence</b><p>Sur l'appareil · Gratuit · Privé</p></div></div><span class="badge ok">✓ Utilisé</span></div>
+ <div class="perm"><div class="row wrap" style="gap:10px"><i class="rad"></i><div style="flex:1 1 180px"><b>Modèle local (Ollama, LM Studio)</b><p>Gratuit · Privé</p></div></div><span class="badge">Non détecté</span><span class="btn sm">Comment l'installer</span></div>
+ <div class="perm"><div class="row wrap" style="gap:10px"><i class="rad"></i><div style="flex:1 1 180px"><b>Mon IA (Claude Code, Codex…)</b><p>Utilise votre abonnement · via MCP</p></div></div><span class="badge ok">✓ Raccordé</span></div>
+ <div class="perm"><div class="row wrap" style="gap:10px"><i class="rad"></i><div style="flex:1 1 180px"><b>Clé personnelle (Gemini, OpenRouter…)</b><p>Gratuit selon le quota · envoie du texte</p></div></div><span class="badge">Non configuré</span><span class="btn sm">Ajouter une clé</span></div>
+ <div class="perm"><div class="row wrap" style="gap:10px"><i class="rad"></i><div style="flex:1 1 180px"><b>Montage par règles</b><p>Sans IA · toujours disponible</p></div></div><span class="badge ok">✓ Repli</span></div>
+ <p class="muted" style="margin:0;font-size:12px">Si un moteur échoue ou dépasse son quota, le suivant prend le relais ; l'écran de montage dit toujours lequel a servi.</p>
+</div>
+<div class="panel"><p class="t">Confidentialité</p>
+ <div class="set"><div>N'envoyer que du texte, jamais d'image<small>Résumé des actions et libellés, pas votre écran</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Demander avant tout envoi hors du Mac</div><div class="toggle on"></div></div>
+ <div class="set"><div>Voir ce qui sera envoyé<small>Aperçu exact du texte transmis à un service en ligne</small></div><span class="btn sm">Afficher</span></div>
+ <div class="set"><div>Garder un journal local des échanges</div><div class="toggle"></div></div>
+</div>
+<div class="panel"><p class="t">Ce que l'IA peut faire</p>
+ <div class="set"><div>Couper les temps morts</div><div class="toggle on"></div></div>
+ <div class="set"><div>Écarter les essais ratés</div><div class="toggle on"></div></div>
+ <div class="set"><div>Choisir les zooms</div><div class="toggle on"></div></div>
+ <div class="set"><div>Ajouter des textes d'après vos clics</div><div class="toggle on"></div></div>
+ <div class="set"><div>Traduire les textes<small>Français, anglais, espagnol, italien</small></div><div class="toggle"></div></div>
+ <div class="set"><div>Ajouter une carte titre</div><div class="toggle"></div></div>
+ <div class="set"><div>Réordonner les séquences<small>Désactivé : l'ordre de vos actions est conservé</small></div><div class="toggle"></div></div>
+</div>
+<div class="panel"><p class="t">Par défaut</p>
+ <div class="set"><div>Durée</div><div class="seg"><span class="on">Auto</span><span class="">15 s</span><span class="">30 s</span><span class="">1 min</span><span class="">2 min</span></div></div>
+ <div class="set"><div>Ton</div><div class="seg"><span class="on">Sobre</span><span class="">Dynamique</span><span class="">Pédagogique</span></div></div>
+ <div class="set"><div>Variantes<small>Court, Équilibré, Détaillé</small></div><div class="seg"><span class="">1</span><span class="on">3</span></div></div>
+ <div class="set"><div>Monter automatiquement à l'arrêt de chaque prise<small>Résultat immédiat par règles, l'IA l'améliore ensuite</small></div><div class="toggle on"></div></div>
+</div>
+<div class="panel"><p class="t">Lecture de l'écran (locale, gratuite)</p>
+ <div class="set"><div>Reconnaître le texte à l'écran<small>Nomme les boutons cliqués quand aucune IA n'a annoncé ses actions</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Utiliser l'accessibilité pour nommer les éléments<small>Plus précis ; demande l'autorisation Accessibilité</small></div><div class="toggle"></div></div>
+</div>
+</div></div></div>
+</section>
+<section class="screen" id="s7">
+  <h2>10 · Réglages — Zoom</h2>
+  <p class="note">Tout ce qui règle les zooms automatiques et leur cadrage ; chaque valeur se surcharge bloc par bloc dans la finition.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="">Général</span><span class="">Capture</span><span class="">Qualité</span><span class="">Montage IA</span><span class="on">Zoom</span><span class="">Clics et curseur</span><span class="">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Zoom automatique</p>
+ <div class="set"><div>Mode<small>La mise en scène se refait à volonté après la prise</small></div><div class="seg"><span class="on">Sur les clics</span><span>Manuel</span><span>Aucun</span></div></div>
+ <div class="set"><div>Grossissement<small>Valeur de départ de chaque zoom</small></div><div class="sl"><div class="tr"><i style="width:48%"></i><b style="left:48%"></b></div><span class="v">1,8×</span></div></div>
+ <div class="set"><div>Grossissement maximal</div><div class="sl"><div class="tr"><i style="width:63%"></i><b style="left:63%"></b></div><span class="v">2,5×</span></div></div>
+ <div class="set"><div>Entrée et sortie</div><div class="sl"><div class="tr"><i style="width:45%"></i><b style="left:45%"></b></div><span class="v">0,45 s</span></div></div>
+ <div class="set"><div>Courbe</div><div class="seg"><span class="on">Douce</span><span class="">Ressort</span><span class="">Linéaire</span></div></div>
+ <div class="cv2" style="margin-top:2px"><svg class="curve" viewBox="0 0 300 70" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><path d="M0 62 C70 62 90 12 150 12 S230 62 300 62" fill="none" stroke="var(--action)" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg></div>
+ <p class="muted" style="margin:0;font-size:12px">Courbe de l'entrée puis de la sortie d'un zoom.</p>
+</div>
+<div class="panel"><p class="t">Quand zoomer</p>
+ <div class="set"><div>Regrouper les clics distants de moins de<small>Plusieurs clics proches restent dans un même zoom</small></div><div class="sl"><div class="tr"><i style="width:40%"></i><b style="left:40%"></b></div><span class="v">2,0 s</span></div></div>
+ <div class="set"><div>Rester après la dernière action</div><div class="sl"><div class="tr"><i style="width:30%"></i><b style="left:30%"></b></div><span class="v">0,8 s</span></div></div>
+ <div class="set"><div>Zoomer sur le champ en cours de saisie</div><div class="toggle on"></div></div>
+ <div class="set"><div>Zoomer sur les boutons et menus ouverts</div><div class="toggle"></div></div>
+ <div class="set"><div>Revenir au plan large aux chapitres</div><div class="toggle on"></div></div>
+ <div class="set"><div>Ignorer les clics à moins de<small>Évite les doubles-clics involontaires</small></div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">0,3 s</div></div>
+</div>
+<div class="panel"><p class="t">Cadrage</p>
+ <div class="set"><div>Le cadre suit<small>Où regarde la caméra pendant un zoom</small></div><div class="seg"><span>Le clic</span><span class="on">Le curseur</span><span>L'action</span></div></div>
+ <div class="set"><div>Marge de sécurité aux bords<small>Le cadre ne sort pas de l'image</small></div><div class="sl"><div class="tr"><i style="width:20%"></i><b style="left:20%"></b></div><span class="v">4 %</span></div></div>
+ <div class="set"><div>Souplesse du suivi</div><div class="sl"><div class="tr"><i style="width:55%"></i><b style="left:55%"></b></div><span class="v">Moyenne</span></div></div>
+ <div class="set"><div>Garder le curseur et la zone cliquée visibles</div><div class="toggle on"></div></div>
+ <div class="cv2" style="margin-top:2px"><div class="sh"></div><div class="zr" style="left:38%;top:30%;width:42%;height:46%"></div><div class="zr" style="left:6%;top:12%;width:26%;height:30%;border-color:var(--text-subtle)"></div></div>
+ <p class="muted" style="margin:0;font-size:12px">Cadre de départ (gris) et cadre du zoom (ambre).</p>
+</div>
+<div class="panel"><p class="t">Source des positions</p>
+ <div class="set"><div>Faire confiance aux actions annoncées par l'IA<small>Positions et libellés envoyés par MCP, sans détection</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Détecter les clics réels<small>Sert aux prises à la main, et de repli sans journal</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Détecter les changements d'écran<small>Ajoute un zoom quand une fenêtre s'ouvre</small></div><div class="toggle"></div></div>
+ <div class="set"><div>Format 9:16<small>Cadrage vertical des shorts</small></div><div class="seg"><span class="on">Suit l'action</span><span class="">Centré</span><span class="">Zone fixe</span></div></div>
+</div>
+</div></div></div>
+</section>
+<section class="screen" id="s8">
+  <h2>11 · Réglages — Clics et curseur</h2>
+  <p class="note">Effet visuel de la zone de clic et apparence du curseur, avec aperçu en direct.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="">Général</span><span class="">Capture</span><span class="">Qualité</span><span class="">Montage IA</span><span class="">Zoom</span><span class="on">Clics et curseur</span><span class="">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Effet au clic</p>
+ <div class="tiles"><div class="tile on"><div class="pv"><svg viewBox="0 0 52 52" width="52" height="52" style="position:absolute;inset:0"><circle cx="26" cy="26" r="7" fill="none" stroke="#fff" stroke-width="2"/><circle cx="26" cy="26" r="15" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/></svg></div>Onde</div><div class="tile"><div class="pv"><svg viewBox="0 0 52 52" width="52" height="52" style="position:absolute;inset:0"><circle cx="26" cy="26" r="16" fill="#fff" fill-opacity=".28"/><circle cx="26" cy="26" r="5" fill="#fff"/></svg></div>Halo</div><div class="tile"><div class="pv"><svg viewBox="0 0 52 52" width="52" height="52" style="position:absolute;inset:0"><circle cx="26" cy="26" r="6" fill="#fff"/><circle cx="26" cy="26" r="13" fill="none" stroke="#fff" stroke-width="3" stroke-opacity=".7"/></svg></div>Pulsation</div><div class="tile"><div class="pv"><svg viewBox="0 0 52 52" width="52" height="52" style="position:absolute;inset:0"><circle cx="26" cy="26" r="12" fill="none" stroke="#fff" stroke-width="2"/><path d="M26 8v8M26 36v8M8 26h8M36 26h8" stroke="#fff" stroke-width="2"/></svg></div>Cible</div><div class="tile"><div class="pv"><svg viewBox="0 0 52 52" width="52" height="52" style="position:absolute;inset:0"><path d="M18 26h16" stroke="#fff" stroke-opacity=".5" stroke-width="2"/></svg></div>Aucun</div></div>
+ <div class="set"><div>Couleur</div><div class="sw"><i class="on" style="background:#ffffff"></i><i class="" style="background:#38bdf8"></i><i class="" style="background:#fbbf24"></i><i class="" style="background:#f43f5e"></i><i class="" style="background:#4ade80"></i><span class="btn sm">Autre…</span></div></div>
+ <div class="set"><div>Taille</div><div class="sl"><div class="tr"><i style="width:45%"></i><b style="left:45%"></b></div><span class="v">48 px</span></div></div>
+ <div class="set"><div>Durée</div><div class="sl"><div class="tr"><i style="width:35%"></i><b style="left:35%"></b></div><span class="v">0,5 s</span></div></div>
+ <div class="set"><div>Épaisseur</div><div class="sl"><div class="tr"><i style="width:25%"></i><b style="left:25%"></b></div><span class="v">3 px</span></div></div>
+ <div class="set"><div>Opacité</div><div class="sl"><div class="tr"><i style="width:80%"></i><b style="left:80%"></b></div><span class="v">80 %</span></div></div>
+</div>
+<div class="panel"><p class="t">Selon le geste</p>
+ <div class="set"><div>Distinguer clic droit et double-clic<small>Autre couleur ou double onde</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Maintenir l'effet pendant un glisser</div><div class="toggle on"></div></div>
+ <div class="set"><div>Tracer le chemin d'un glisser</div><div class="toggle"></div></div>
+ <div class="set"><div>Effet sur les actions annoncées par l'IA<small>Pour les clics que l'IA décrit sans qu'ils soient détectés</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Afficher les touches frappées<small>Pastille ⌘C près du curseur</small></div><div class="toggle"></div></div>
+ <div class="cv2"><div class="sh"></div>
+  <svg viewBox="0 0 100 56" style="position:absolute;inset:0;width:100%;height:100%"><circle cx="58" cy="34" r="6" fill="none" stroke="#fff" stroke-width="1.2"/><circle cx="58" cy="34" r="11" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2"/><path d="M58 34 L58 46 L61 43 L63 49 L65 48 L63 42 L67 42 Z" fill="#fff" stroke="#000" stroke-width=".5"/></svg></div>
+ <p class="muted" style="margin:0;font-size:12px">Aperçu avec les réglages actuels.</p>
+</div>
+<div class="panel"><p class="t">Curseur</p>
+ <div class="set"><div>Style</div><div class="seg"><span class="on">Système</span><span>Flèche large</span><span>Point</span><span>Main</span></div></div>
+ <div class="set"><div>Taille</div><div class="sl"><div class="tr"><i style="width:55%"></i><b style="left:55%"></b></div><span class="v">150 %</span></div></div>
+ <div class="set"><div>Lissage<small>Trajectoire arrondie, sans à-coups</small></div><div class="seg"><span class="">Aucun</span><span class="">Léger</span><span class="on">Moyen</span><span class="">Fort</span></div></div>
+ <div class="set"><div>Ombre sous le curseur</div><div class="toggle on"></div></div>
+ <div class="set"><div>Masquer le curseur quand il est immobile</div><div class="toggle"></div></div>
+ <div class="set"><div>Ralentir à l'approche d'un clic<small>Donne le temps de voir la cible</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Délai avant de masquer</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">2 s</div></div>
+</div>
+<div class="panel"><p class="t">Mise en évidence</p>
+ <div class="set"><div>Estomper l'écran autour du pointeur</div><div class="toggle"></div></div>
+ <div class="set"><div>Cercle de focalisation autour du curseur</div><div class="toggle"></div></div>
+ <div class="set"><div>Intensité de l'estompage</div><div class="sl"><div class="tr"><i style="width:50%"></i><b style="left:50%"></b></div><span class="v">50 %</span></div></div>
+ <div class="set"><div>Encadrer l'élément cliqué<small>Rectangle d'accent, d'après l'accessibilité</small></div><div class="toggle"></div></div>
+</div>
+</div></div></div>
+</section>
+<section class="screen" id="s9">
+  <h2>12 · Réglages — Icône</h2>
+  <p class="note">Icône de la barre de menus (couleur ou monochrome, états) et icône de l'appli. Choix de style à valider avec vous.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="">Général</span><span class="">Capture</span><span class="">Qualité</span><span class="">Montage IA</span><span class="">Zoom</span><span class="">Clics et curseur</span><span class="on">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Icône de la barre de menus</p>
+ <div class="seg" style="align-self:flex-start"><span class="on">Silhouette en couleur</span><span>Monochrome</span></div>
+ <div class="set"><div>Couleur<small>Sans effet en monochrome, qui suit le thème du Mac</small></div><div class="sw"><i class="on" style="background:#f43f5e"></i><i class="" style="background:#f59e0b"></i><i class="" style="background:#38bdf8"></i><i class="" style="background:#4ade80"></i><i class="" style="background:#a78bfa"></i><span class="btn sm">Autre…</span></div></div>
+ <div class="set"><div>Taille</div><div class="sl"><div class="tr"><i style="width:50%"></i><b style="left:50%"></b></div><span class="v">18 px</span></div></div>
+ <div class="set"><div>Pastille rouge pendant une prise</div><div class="toggle on"></div></div>
+ <div class="set"><div>Afficher le compteur de temps à droite</div><div class="toggle on"></div></div>
+ <div class="set"><div>Pastille du nombre de rendus en file</div><div class="toggle on"></div></div>
+ <div class="set"><div>Indiquer qu'une IA pilote<small>Liseré d'accent autour de l'icône</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Présence</div><div class="seg"><span class="">Dock</span><span class="on">Barre de menus</span><span class="">Les deux</span></div></div>
+</div>
+<div class="panel"><p class="t">Aperçu des états</p>
+ <div class="mbstrip d"><span class="lbl">Repos</span><span class="ic"><svg width="22" height="14" style="color:#f43f5e"><use href="#tape"/></svg></span></div>
+ <div class="mbstrip d"><span class="lbl">Enregistrement</span><span class="ic"><svg width="22" height="14" style="color:#f43f5e"><use href="#tape"/></svg><span class="rec">● 00:42</span></span></div>
+ <div class="mbstrip d"><span class="lbl">Pause</span><span class="ic" style="opacity:.55"><svg width="22" height="14" style="color:#f43f5e"><use href="#tape"/></svg><span>⏸ 00:42</span></span></div>
+ <div class="mbstrip d"><span class="lbl">Rendu en file</span><span class="ic"><svg width="22" height="14" style="color:#f43f5e"><use href="#tape"/></svg><span class="badge" style="background:var(--warning-bg);color:var(--warning)">2</span></span></div>
+ <div class="mbstrip d"><span class="lbl">Piloté par une IA</span><span class="ic" style="outline:1px solid var(--accent-text);border-radius:5px;padding:1px 5px"><svg width="22" height="14" style="color:#f43f5e"><use href="#tape"/></svg><span class="rec">● 00:42</span></span></div>
+ <div class="mbstrip l"><span class="lbl">Barre claire · repos</span><span class="ic"><svg width="22" height="14" style="color:#e11d48"><use href="#tape"/></svg></span></div>
+ <div class="mbstrip l"><span class="lbl">Barre claire · monochrome</span><span class="ic"><svg width="22" height="14" style="color:#111"><use href="#tape"/></svg></span></div>
+</div>
+<div class="panel"><p class="t">Icône de l'application</p><p class="sub" style="margin-top:-6px">Dock, Finder, fenêtre « À propos ». La barre de menus reprend le même motif.</p>
+ <div class="iconrow">
+  <div class="apptile on"><div class="ai" style="background:linear-gradient(135deg,#fb7185,#be123c)"><svg width="38" height="24" style="color:#fff"><use href="#tape"/></svg></div>Cassette rose</div>
+  <div class="apptile"><div class="ai" style="background:linear-gradient(135deg,#3a3a42,#17171a)"><svg width="38" height="24" style="color:#f43f5e"><use href="#tape"/></svg></div>Sombre</div>
+  <div class="apptile"><div class="ai" style="background:linear-gradient(135deg,#ffffff,#d9d9e0)"><svg width="38" height="24" style="color:#e11d48"><use href="#tape"/></svg></div>Claire</div>
+  <div class="apptile"><div class="ai" style="background:linear-gradient(135deg,#8b8b94,#4a4a52)"><svg width="38" height="24" style="color:#fff"><use href="#tape"/></svg></div>Graphite</div>
+ </div>
+ <div class="set"><div>Changer l'icône du Dock pendant une prise<small>Pastille rouge sur l'icône</small></div><div class="toggle"></div></div>
+ <div class="set"><div>Utiliser la même couleur dans l'icône de l'appli et celle de la barre</div><div class="toggle on"></div></div>
+</div>
+<div class="panel"><p class="t">Menu de l'icône</p>
+ <div class="set"><div>Clic gauche : ouvrir le panneau de prise</div><div class="toggle on"></div></div>
+ <div class="set"><div>Clic gauche pendant une prise</div><div class="seg"><span class="on">Arrêter</span><span class="">Pause</span><span class="">Ouvrir le menu</span></div></div>
+ <p class="muted" style="margin:0;font-size:12px">Clic droit : menu sous l'icône, sur l'écran qui la porte.</p>
+</div>
+</div></div></div>
+</section>
+<section class="screen" id="s10">
+  <h2>13 · Réglages — Général</h2>
+  <p class="note">Langue, raccourcis, enregistrement, pilotage IA, finition par défaut, mise à jour automatique.</p>
+  <div class="win" style="max-width:1060px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><span class="ttl">Réglages</span></div><div class="tabs"><span class="on">Général</span><span class="">Capture</span><span class="">Qualité</span><span class="">Montage IA</span><span class="">Zoom</span><span class="">Clics et curseur</span><span class="">Icône</span></div><div class="main"><div class="mods">
+<div class="panel"><p class="t">Général</p><div class="set"><div>Mode<small>Simple : l'essentiel. Avancé : finition, IA et réglages complets</small></div><div class="seg"><span class="">Simple</span><span class="on">Avancé</span></div></div><div class="set"><div>Assistant de configuration<small>Autorisations, usage, raccordement d'une IA</small></div><span class="btn sm">Relancer</span></div>
+ <div class="set"><div>Langue<small>Système : français</small></div><div class="seg"><span class="on">Système</span><span class="">FR</span><span class="">EN</span><span class="">ES</span><span class="">IT</span></div></div>
+ <div class="set"><div>Ouvrir au démarrage du Mac</div><div class="toggle on"></div></div>
+ <div class="set"><div>Raccourci d'enregistrement</div><span class="btn sm mono">⌘⇧5</span></div>
+ <div class="set"><div>Raccourci pour marquer un chapitre</div><span class="btn sm mono">⌘⇧M</span></div>
+</div>
+<div class="panel"><p class="t">Enregistrement</p>
+ <div class="set"><div>Images par seconde</div><div class="seg"><span class="">30</span><span class="on">60</span></div></div>
+ <div class="set"><div>Qualité du brut</div><div class="seg"><span class="">HEVC</span><span class="on">ProRes 422</span></div></div>
+ <div class="set"><div>Dossier des prises<small class="mono">~/Movies/mTAPES</small></div><span class="btn sm">Choisir…</span></div>
+ <div class="set"><div>Durée maximale d'une prise</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">30 min</div></div>
+</div>
+<div class="panel"><p class="t">Pilotage IA</p>
+ <div class="set"><div>Serveur MCP<small>Démarre avec mTAPES</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>HTTP local<small>Pour les clients qui ne lancent pas de commande</small></div><div class="toggle"></div></div>
+ <div class="set"><div>Durée maximale d'une prise pilotée</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">10 min</div></div>
+ <div class="set"><div>Écran entier autorisé à une IA<small>Sinon fenêtres d'applis seulement</small></div><div class="toggle"></div></div>
+ <div class="set"><div>Demander mon accord à la première prise de chaque IA</div><div class="toggle on"></div></div>
+</div>
+<div class="panel"><p class="t">Finition par défaut</p>
+ <div class="set"><div>Préréglage</div><div class="field" style="height:32px;width:160px;justify-content:space-between">README<span class="subtle">⌄</span></div></div>
+ <div class="set"><div>Accélérer les temps morts<small>Plus de 1,5 s sans action</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Fond par défaut</div><div class="field" style="height:32px;width:90px;color:var(--accent-text)">Violet</div></div>
+</div>
+<div class="panel"><p class="t">Mise à jour</p>
+ <div class="set"><div>Installer automatiquement<small>Recherche quotidienne, jamais pendant une prise ou un rendu</small></div><div class="toggle on"></div></div>
+ <div class="set"><div>Version 1.0 (1)<small>À jour</small></div><span class="btn sm">Rechercher</span></div>
+</div>
+</div></div></div>
+</section>
+</body>
+</html>

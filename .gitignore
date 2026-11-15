@@ -1,0 +1,6 @@
+.build/
+*.tape/
+dist/
+.DS_Store
+PASSATION_*.md
+ETAT.md
