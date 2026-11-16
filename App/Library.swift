@@ -141,7 +141,23 @@ struct LibraryView: View {
 
     @ViewBuilder private var detail: some View {
         if let item = selected {
-            VStack(alignment: .leading, spacing: Socle.M.space4) {
+            VStack(spacing: 0) {
+                ScrollView { detailBody(item) }
+                HStack(spacing: Socle.M.space2) {
+                    Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }.buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
+                    Button(L.t("lib.trash")) { store.trash(item); selection = nil }.buttonStyle(SocleButtonStyle(.tertiary)).fixedSize()
+                    Spacer()
+                }
+                .padding(Socle.M.space4)
+                .background(Socle.C.surface)
+            }
+        } else {
+            Text(L.t("lib.pick")).socle(Socle.T.body).foregroundStyle(Socle.C.textSubtle).padding(Socle.M.space5)
+        }
+    }
+
+    private func detailBody(_ item: LibraryItem) -> some View {
+        VStack(alignment: .leading, spacing: Socle.M.space4) {
                 Text(item.name).socle(Socle.T.heading).foregroundStyle(Socle.C.textStrong).fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: Socle.M.space1_5) {
                     fact(L.t("lib.src"), item.sourceKind == "display" ? L.t("lib.src.display") : L.t("lib.src.window", item.windowTitle.isEmpty ? "—" : item.windowTitle))
@@ -162,16 +178,10 @@ struct LibraryView: View {
                 }
                 if busy.contains(item.id) { HStack(spacing: 8) { ProgressView().controlSize(.small); Text(L.t("lib.exporting")).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted) } }
                 else if let s = status[item.id] { Text(s).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
-                Spacer(minLength: 0)
-                HStack(spacing: Socle.M.space2) {
-                    Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }.buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
-                    Button(L.t("lib.trash")) { store.trash(item); selection = nil }.buttonStyle(SocleButtonStyle(.tertiary)).fixedSize()
-                }
+                if preview == nil && item.state == "complete" { EditorPanel(url: item.url, seconds: item.seconds).id(item.id) }
             }
             .padding(Socle.M.space5)
-        } else {
-            Text(L.t("lib.pick")).socle(Socle.T.body).foregroundStyle(Socle.C.textSubtle).padding(Socle.M.space5)
-        }
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func fact(_ k: String, _ v: String) -> some View {
@@ -193,5 +203,100 @@ struct LibraryView: View {
             busy.remove(item.id)
             store.reload()
         }
+    }
+}
+
+
+/// Retouche du montage d'une prise : zooms, accélérations et légendes (finition.json). Le brut n'est jamais touché.
+struct EditorPanel: View {
+    let url: URL
+    let seconds: Double
+    @State private var spec: FinishingSpec?
+    @State private var error: String?
+
+    private var package: TapePackage { TapePackage(url: url) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Socle.M.space3) {
+            HStack {
+                Text(L.t("ed.title")).socle(Socle.T.title).foregroundStyle(Socle.C.textStrong)
+                Spacer()
+                Button(L.t("ed.recompute")) { recompute() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
+            }
+            if let error { Text(error).socle(Socle.T.meta).foregroundStyle(Socle.C.danger).fixedSize(horizontal: false, vertical: true) }
+            if let spec {
+                group(L.t("ed.zooms"), empty: spec.zooms.isEmpty) {
+                    ForEach(Array(spec.zooms.enumerated()), id: \.offset) { i, z in
+                        row(L.t("ed.zoom.row", fmt(z.scale), time(z.t0), time(z.t1)), by: z.source) { edit { $0.zooms.remove(at: i) } }
+                    }
+                }
+                group(L.t("ed.speeds"), empty: spec.speeds.isEmpty) {
+                    ForEach(Array(spec.speeds.enumerated()), id: \.offset) { i, v in
+                        row(L.t("ed.speed.row", fmt(v.factor), time(v.t0), time(v.t1)), by: nil) { edit { $0.speeds.remove(at: i) } }
+                    }
+                }
+                group(L.t("ed.captions"), empty: spec.captions.isEmpty) {
+                    ForEach(Array(spec.captions.enumerated()), id: \.offset) { i, c in
+                        HStack(spacing: Socle.M.space2) {
+                            Text(time(c.t0)).socle(Socle.T.mono).foregroundStyle(Socle.C.textMuted).frame(width: 56, alignment: .leading)
+                            TextField("", text: Binding(get: { c.text }, set: { v in edit { if $0.captions.indices.contains(i) { $0.captions[i].text = v } } }))
+                                .textFieldStyle(.plain).socle(Socle.T.body).modifier(SocleField(multiline: false))
+                                .accessibilityLabel(L.t("ed.captions") + " " + time(c.t0))
+                            deleteButton { edit { $0.captions.remove(at: i) } }
+                        }
+                    }
+                }
+                Text(L.t("ed.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .onAppear(perform: load)
+    }
+
+    private func group<C: View>(_ title: String, empty: Bool, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: Socle.M.space1_5) {
+            Text(title).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+            if empty { Text(L.t("ed.none")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle) } else { content() }
+        }
+    }
+
+    private func row(_ text: String, by: String?, onDelete: @escaping () -> Void) -> some View {
+        HStack(spacing: Socle.M.space2) {
+            Text(text).socle(Socle.T.mono).foregroundStyle(Socle.C.text)
+            if let by { SocleChip(text: L.t("ed.by." + (["auto", "ai", "manual"].contains(by) ? by : "manual"))) }
+            Spacer(minLength: 0)
+            deleteButton(onDelete)
+        }
+    }
+
+    private func deleteButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) { Image(systemName: "trash") }
+            .buttonStyle(SocleButtonStyle(.tertiary, height: 28)).fixedSize().accessibilityLabel(L.t("ed.delete"))
+    }
+
+    private func fmt(_ v: Double) -> String { String(format: "%.1f", locale: L.locale, v) }
+    private func time(_ t: Double) -> String {
+        let m = Int(t) / 60, sec = t - Double(m * 60)
+        return "\(m):" + (sec < 10 ? "0" : "") + String(format: "%.1f", locale: L.locale, sec)
+    }
+
+    private func load() {
+        do { spec = try Finisher.loadOrPlan(package, preset: .release) }
+        catch { self.error = L.t("ed.fail", "\(error)") }
+    }
+
+    private func edit(_ change: (inout FinishingSpec) -> Void) {
+        guard var s = spec else { return }
+        change(&s)
+        spec = s
+        try? Finisher.save(s, to: package)
+    }
+
+    private func recompute() {
+        do {
+            let preset = FinishingPreset(rawValue: spec?.preset ?? "release") ?? .release
+            let s = try Finisher.plan(package, preset: preset)
+            try Finisher.save(s, to: package)
+            spec = s
+        } catch { self.error = L.t("ed.fail", "\(error)") }
     }
 }

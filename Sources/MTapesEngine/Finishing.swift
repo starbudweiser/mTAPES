@@ -74,6 +74,16 @@ public struct FinishingSpec: Codable, Equatable {
     }
 }
 
+extension FinishingSpec {
+    /// Mêmes retouches (zooms, accélérations, légendes, curseur), cadre et cadence de la destination demandée.
+    public func adapted(to preset: FinishingPreset) -> FinishingSpec {
+        guard self.preset != preset.rawValue else { return self }
+        var s = self
+        s.preset = preset.rawValue; s.fps = preset.fps; s.canvas = preset.canvas
+        return s
+    }
+}
+
 /// Préréglages de destination : un nom d'usage, un format, un cadre.
 public enum FinishingPreset: String, CaseIterable {
     case readme      // page de présentation GitHub : 16:9, 1280 × 720, GIF léger ou MP4

@@ -151,6 +151,17 @@ final class FinishingTests: XCTestCase {
         XCTAssertEqual(again.zooms.count, 1); XCTAssertTrue(again.captions.isEmpty)
     }
 
+    func testSavedEditsFollowTheDestination() {
+        var spec = FinishingSpec(preset: "release", fps: 60, canvas: FinishingPreset.release.canvas)
+        spec.zooms = [.init(t0: 1, t1: 3, scale: 2, fx: 0.3, fy: 0.4, source: "manual")]
+        spec.captions = [.init(t0: 1, t1: 2, text: "Ouvrir")]
+        let short = spec.adapted(to: .short)
+        XCTAssertEqual(short.canvas.height, 1920); XCTAssertEqual(short.preset, "short")
+        XCTAssertEqual(short.zooms, spec.zooms); XCTAssertEqual(short.captions, spec.captions)
+        XCTAssertEqual(spec.adapted(to: .release), spec)
+        XCTAssertEqual(spec.adapted(to: .readme).fps, 30)
+    }
+
     func testTimelineMapsSourceAndOutputTime() {
         let t = FinishingSpec.Timeline(speeds: [.init(t0: 2, t1: 10, factor: 4)], sourceDuration: 12)
         XCTAssertEqual(t.outputDuration, 2 + 2 + 2, accuracy: 1e-9)           // 2 s normales, 8 s ÷ 4, 2 s normales
