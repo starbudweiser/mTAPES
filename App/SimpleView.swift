@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SimpleView: View {
     @ObservedObject var model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     /// La fenêtre épouse le contenu (pas de zone vide) ; la largeur est fixe, la hauteur suit l'état.
     var body: some View {
@@ -34,6 +35,11 @@ struct SimpleView: View {
         HStack {
             Text(branded: "mTAPES").socle(Socle.T.display).foregroundStyle(Socle.C.textStrong)
             Spacer()
+            if model.mode == .advanced {
+                Button(L.t("lib.title")) { openWindow(id: "library"); NSApp.activate() }.buttonStyle(SocleButtonStyle(.tertiary, height: 28)).fixedSize()
+            }
+            SocleSegmented(options: [AppModel.UsageMode.simple, .advanced], selection: model.mode,
+                           label: { $0 == .simple ? L.t("mode.simple") : L.t("mode.advanced") }) { model.mode = $0 }
         }
     }
 }

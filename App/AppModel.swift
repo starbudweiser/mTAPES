@@ -34,6 +34,14 @@ final class AppModel: ObservableObject {
     @Published var problem: String?
     /// Un résultat (ou une erreur) est arrivé pendant que la fenêtre n'était pas à l'écran : l'icône de la barre de menus le signale.
     @Published var unseen: Bool = false
+    /// Mode d'usage : Simple (une fenêtre) ou Avancé (bibliothèque et pilotage par IA). Sans choix enregistré : Avancé, pour ne rien masquer à qui l'utilise déjà.
+    enum UsageMode: String { case simple, advanced }
+    @Published var mode: UsageMode = UsageMode(rawValue: UserDefaults.standard.string(forKey: "usageMode") ?? "") ?? .advanced {
+        didSet { UserDefaults.standard.set(mode.rawValue, forKey: "usageMode") }
+    }
+    @Published var setupDone: Bool = UserDefaults.standard.bool(forKey: "setupDone") {
+        didSet { UserDefaults.standard.set(setupDone, forKey: "setupDone") }
+    }
     @Published var lastSummary: TapeSummary?
     /// Pilotage par IA (MCP) : désactivé par défaut ; tant qu'il est coché dans le menu, un socket privé accepte les commandes du même utilisateur.
     /// Accord par client MCP (nom annoncé à l'initialisation) : un client inconnu est mis en attente et ne peut rien faire avant votre accord.

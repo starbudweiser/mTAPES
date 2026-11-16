@@ -3,11 +3,7 @@ import SwiftUI
 
 struct AIControlView: View {
     @ObservedObject var model: AppModel
-    @State private var clients: [MCPClientInfo] = []
-    @State private var message: String?
     @State private var showToken = false
-
-    private var cliPath: String { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/mtapes-cli").path }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -19,21 +15,7 @@ struct AIControlView: View {
                 Toggle(L.t("ai.enable"), isOn: $model.mcpEnabled).toggleStyle(.switch).accessibilityLabel(L.t("ai.enable")).socle(Socle.T.label).foregroundStyle(Socle.C.text)
 
                 if model.mcpEnabled {
-                    section(L.t("ai.clients")) {
-                        ForEach(clients) { c in
-                            HStack {
-                                Text(c.name).socle(Socle.T.label).foregroundStyle(Socle.C.text)
-                                Spacer()
-                                switch c.status {
-                                case .notDetected: Text(L.t("ai.notfound")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle)
-                                case .connected: Text("✓ " + L.t("ai.connected")).socle(Socle.T.meta).foregroundStyle(Socle.C.success)
-                                case .detected:
-                                    Button(L.t("ai.connect")) { connect(c) }.buttonStyle(SocleButtonStyle(.primary, height: 28)).fixedSize()
-                                }
-                            }
-                        }
-                        if let message { Text(message).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
-                    }
+                    section(L.t("ai.clients")) { ConnectorRows() }
 
                     section(L.t("ai.http")) {
                         Toggle(L.t("ai.http.enable"), isOn: $model.mcpHTTPEnabled).toggleStyle(.switch).accessibilityLabel(L.t("ai.http.enable")).socle(Socle.T.label).foregroundStyle(Socle.C.text)
@@ -73,7 +55,6 @@ struct AIControlView: View {
         }
         .frame(width: 560)
         .fixedSize(horizontal: false, vertical: true)
-        .onAppear { clients = Connectors.list() }
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
@@ -86,6 +67,37 @@ struct AIControlView: View {
         .background(Socle.C.surface, in: RoundedRectangle(cornerRadius: Socle.M.radius))
     }
 
+    private func copy(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+}
+
+/// Liste des IA détectées avec « Raccorder » : partagée par la fenêtre « Pilotage par IA » et l'assistant.
+struct ConnectorRows: View {
+    @State private var clients: [MCPClientInfo] = []
+    @State private var message: String?
+    private var cliPath: String { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/mtapes-cli").path }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Socle.M.space3) {
+            ForEach(clients) { c in
+                HStack {
+                    Text(c.name).socle(Socle.T.label).foregroundStyle(Socle.C.text)
+                    Spacer()
+                    switch c.status {
+                    case .notDetected: Text(L.t("ai.notfound")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle)
+                    case .connected: Text("✓ " + L.t("ai.connected")).socle(Socle.T.meta).foregroundStyle(Socle.C.success)
+                    case .detected:
+                        Button(L.t("ai.connect")) { connect(c) }.buttonStyle(SocleButtonStyle(.primary, height: 28)).fixedSize()
+                    }
+                }
+            }
+            if let message { Text(message).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
+        }
+        .onAppear { clients = Connectors.list() }
+    }
+
     private func connect(_ c: MCPClientInfo) {
         do {
             try Connectors.connect(id: c.id, cli: cliPath)
@@ -94,10 +106,5 @@ struct AIControlView: View {
             message = L.t("ai.failed", "\(error)")
         }
         clients = Connectors.list()
-    }
-
-    private func copy(_ text: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
     }
 }

@@ -24,6 +24,18 @@ struct MTapesApp: App {
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(CommandLine.arguments.contains("--show-ai") ? .presented : .suppressed)
 
+        Window(L.t("setup.title"), id: "setup") {
+            SetupHost(model: model)
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(CommandLine.arguments.contains("--show-setup") ? .presented : .suppressed)
+
+        Window(L.t("lib.title"), id: "library") {
+            LibraryView(model: model)
+        }
+        .defaultSize(width: 900, height: 560)
+        .defaultLaunchBehavior(CommandLine.arguments.contains("--show-library") ? .presented : .suppressed)
+
         MenuBarExtra {
             Button(model.phase == .recording ? L.t("menu.stop") : L.t("menu.record")) { model.toggle() }
                 .disabled(model.phase == .finishing || (model.phase != .recording && !model.canRecord))
@@ -32,8 +44,12 @@ struct MTapesApp: App {
             }
             Button(L.t("menu.open")) { openWindow(id: "main"); NSApp.activate() }
             Divider()
-            Toggle(L.t("menu.mcp"), isOn: $model.mcpEnabled)
-            Button(L.t("menu.ai")) { openWindow(id: "ai"); NSApp.activate() }
+            if model.mode == .advanced {
+                Button(L.t("menu.library")) { openWindow(id: "library"); NSApp.activate() }
+                Toggle(L.t("menu.mcp"), isOn: $model.mcpEnabled)
+                Button(L.t("menu.ai")) { openWindow(id: "ai"); NSApp.activate() }
+            }
+            Button(L.t("menu.setup")) { openWindow(id: "setup"); NSApp.activate() }
             ForEach(model.pendingClients, id: \.self) { c in
                 Button(L.t("menu.mcp.approve", c)) { model.approve(c) }
             }
@@ -51,8 +67,16 @@ struct MTapesApp: App {
     }
 }
 
+/// Contenu de la fenêtre de l'assistant (se ferme à la fin).
+struct SetupHost: View {
+    @ObservedObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    var body: some View { SetupView(model: model, startChoice: model.mcpEnabled ? "advanced" : "simple", onClose: { dismiss() }) }
+}
+
 struct MenuBarLabel: View {
     @ObservedObject var model: AppModel
+    @Environment(\.openWindow) private var openWindow
     var body: some View {
         HStack(spacing: 4) {
             Image(nsImage: Cassette.menuBarImage())
@@ -64,6 +88,11 @@ struct MenuBarLabel: View {
                 // Résultat ou erreur arrivé sans fenêtre ouverte (prise lancée au raccourci) : pastille, sans rien ouvrir.
                 if case .failed = model.phase { Text("!").bold().foregroundStyle(.orange) } else { Text("✓").bold().foregroundStyle(.green) }
             }
+        }
+        .task {
+            // Premier lancement : l'assistant s'ouvre seul, mais jamais lors d'un lancement en arrière-plan (pilotage par IA : `open -g`).
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            if !model.setupDone && NSApp.isActive && !CommandLine.arguments.contains("--selftest") { openWindow(id: "setup"); NSApp.activate() }
         }
     }
 }
@@ -152,6 +181,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if opt("--kind") == "window" { model.kind = .window }
         let scheme = opt("--scheme") ?? "dark"
         Socle.apply(scheme == "light" ? .light : .dark)
+        if opt("--view") == "setup" || opt("--view") == "library" {
+            let dark: ColorScheme = scheme == "light" ? .light : .dark
+            let content: AnyView
+            if opt("--view") == "setup" {
+                content = AnyView(SetupView(model: model, startStep: Int(opt("--step") ?? "0") ?? 0, startChoice: opt("--choice") ?? "simple").environment(\.colorScheme, dark))
+            } else {
+                let now = Date()
+                func item(_ n: String, _ s: Double, _ o: String, _ c: String?, _ ago: Double, _ ex: [(String, Int64)]) -> LibraryItem {
+                    LibraryItem(url: URL(fileURLWithPath: "/tmp/\(n).tape"), name: n, created: now.addingTimeInterval(-ago), seconds: s, rawBytes: 41_000_000, origin: o, client: c, state: "complete",
+                                sourceKind: "window", windowTitle: "mBACKUP", marks: 11, exports: ex)
+                }
+                let items = [item("mBACKUP — première sauvegarde", 118, "mcp", "Claude Code", 3600, [("readme.gif", 7_800_000), ("release.mp4", 14_000_000)]),
+                             item("mLINKS — ajout d'un raccourci", 48, "mcp", "Codex", 7200, []), item("Réglages de hERALD", 19, "manual", nil, 90000, [])]
+                var l = LibraryView(model: model, preview: items, flat: true)
+                l.seed(selection: items[0].id)
+                content = AnyView(l.frame(width: 900, height: 560).environment(\.colorScheme, dark))
+            }
+            let r = ImageRenderer(content: content); r.scale = 2
+            if let image = r.nsImage, let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: URL(fileURLWithPath: path)); print("RENDER OK \(path)")
+            }
+            exit(0)
+        }
         if opt("--view") == "ai" {
             // Rendu de la fenêtre « Pilotage par IA » : les réglages sont forcés le temps du rendu puis rétablis (rien ne reste activé).
             let oldMCP = UserDefaults.standard.bool(forKey: "mcpEnabled"), oldHTTP = UserDefaults.standard.bool(forKey: "mcpHTTPEnabled")
