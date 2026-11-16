@@ -13,6 +13,23 @@ struct ControlError: Error, CustomStringConvertible {
 final class RemoteControl {
     static let shared = RemoteControl()
     private var server: ControlServer?
+    private var httpServer: MCPHTTPServer?
+    var httpPort: UInt16 { MCPHTTPPaths.port(dev: isDev) }
+    var httpURL: String { "http://127.0.0.1:\(httpPort)/mcp" }
+    var httpToken: String { (try? MCPHTTPPaths.loadOrCreateToken(dev: isDev)) ?? "" }
+
+    /// Serveur HTTP local : mêmes outils, mêmes accords par client, jeton obligatoire.
+    func applyHTTP(enabled: Bool) {
+        if enabled {
+            guard httpServer == nil, let token = try? MCPHTTPPaths.loadOrCreateToken(dev: isDev) else { return }
+            let core = MCPCore { method, params in await RemoteControl.shared.handle(ControlRequest(id: 1, method: method, params: params)) }
+            let s = MCPHTTPServer(port: httpPort, token: token, core: core)
+            do { try s.start(); httpServer = s } catch { print("Serveur HTTP : démarrage impossible : \(error)") }
+        } else {
+            httpServer?.stop()
+            httpServer = nil
+        }
+    }
 
     private var isDev: Bool { Bundle.main.bundleIdentifier?.hasSuffix(".dev") ?? false }
 
@@ -34,10 +51,20 @@ final class RemoteControl {
     func handle(_ request: ControlRequest) async -> ControlResponse {
         let model = AppModel.shared
         let p = request.params
+        if request.method != "ping" {
+            let who = p?["mcp_client"]?.string ?? p?["client"]?.string ?? "unknown"
+            if !model.approvedClients.contains(who) {
+                if !model.pendingClients.contains(who) { model.pendingClients.append(who) }
+                return .failure(request.id, "The client \"\(who)\" is not approved yet. Ask the user to open the mTAPES menu-bar menu and choose \"Allow \(who)\" (Autoriser), then retry. Nothing was recorded.")
+            }
+        }
         do {
             switch request.method {
             case "ping":
                 return ok(request, ["app": .string("mTAPES"), "phase": .string(phaseName(model))])
+
+            case "authorize":
+                return ok(request, ["authorized": .bool(true)])
 
             case "targets":
                 return ok(request, try await targets(kind: p?["kind"]?.string))

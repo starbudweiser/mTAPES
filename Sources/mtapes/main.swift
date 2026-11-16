@@ -26,7 +26,7 @@ struct Args {
 
     init(_ raw: [String]) {
         var i = 0
-        let valued: Set<String> = ["input", "q", "kfi", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
+        let valued: Set<String> = ["preset", "dest", "target", "ratio", "input", "q", "kfi", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
         while i < raw.count {
             let a = raw[i]
             if a.hasPrefix("--") {
@@ -71,6 +71,8 @@ struct Args {
     var seconds: Double { options["seconds"].flatMap { Double($0) } ?? 10 }
 }
 
+final class Box<T>: @unchecked Sendable { var value: T; init(_ v: T) { value = v } }
+
 let usage = """
 mtapes <commande>
   doctor                         diagnostic : autorisations, encodeur matériel, qualité constante
@@ -78,6 +80,8 @@ mtapes <commande>
   record [cible] --seconds N     enregistre une prise .tape (--out DIR --name NOM --profile light|balanced|max)
   bench  [cible] --seconds N     enregistre et mesure : processeur, images, poids, délais (--keep garde la prise, --quality mesure SSIM/PSNR)
   encode-bench --input F.mov     réencode une séquence source avec un profil et mesure poids, vitesse, SSIM, PSNR
+  finish TAPE [--preset readme|release|short] [--ratio 9:16]   calcule le calque de finition (zooms, temps morts, légendes)
+  export TAPE --dest readme|release|short [--target MO]         rend le film (MP4) ou le GIF léger
   mcp [--dev]                    serveur MCP (stdio) : transmet les outils tapes_* à l'appli mTAPES (pilotage par IA activé dans son menu)
   info   CHEMIN.tape             affiche les métadonnées d'une prise
 cible : --display N | --window ID | --app BUNDLE | --zone x,y,l,h   (par défaut : écran principal)
@@ -130,8 +134,31 @@ func run() async {
             try? FileManager.default.removeItem(at: out)
         } catch { fail("\(error)") }
 
+    case "finish":
+        guard let path = rest.positional.first else { fail("finish attend le chemin d'une prise .tape") }
+        do {
+            let package = TapePackage(url: URL(fileURLWithPath: path))
+            let preset = FinishingPreset(rawValue: rest.options["preset"] ?? "release") ?? .release
+            let spec = try Finisher.plan(package, preset: preset, ratio: rest.options["ratio"])
+            try Finisher.save(spec, to: package)
+            print("Calque de finition écrit : \(package.finishingURL.path) (\(spec.zooms.count) zooms, \(spec.speeds.count) temps morts accélérés, \(spec.captions.count) légendes)")
+        } catch { fail("\(error)") }
+
+    case "export":
+        guard let path = rest.positional.first else { fail("export attend le chemin d'une prise .tape") }
+        let lastPct = Box(-1)
+        guard let dest = Destination(rawValue: rest.options["dest"] ?? "release") else { fail("--dest : readme, release ou short") }
+        do {
+            let package = TapePackage(url: URL(fileURLWithPath: path))
+            let result = try await Exporter.export(package, destination: dest, targetMegabytes: rest.options["target"].flatMap { Double($0) },
+                                                   progress: { p in let pct = Int(p * 100); if pct % 10 == 0 && pct != lastPct.value { lastPct.value = pct; FileHandle.standardError.write(Data("\(pct) % ".utf8)) } })
+            FileHandle.standardError.write(Data("\n".utf8))
+            printJSON(result)
+        } catch { fail("\(error)") }
+
     case "mcp":
-        MCPServer(dev: rest.flags.contains("dev") || ProcessInfo.processInfo.environment["MTAPES_DEV"] == "1").run()
+        let server = MCPServer(dev: rest.flags.contains("dev") || ProcessInfo.processInfo.environment["MTAPES_DEV"] == "1")
+        server.run()
 
     case "info":
         guard let path = rest.positional.first else { fail("info attend le chemin d'une prise .tape") }

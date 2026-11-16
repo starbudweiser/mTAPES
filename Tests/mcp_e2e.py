@@ -33,7 +33,7 @@ init = rpc("initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "
 check(init["result"]["serverInfo"]["name"] == "mtapes" and "instructions" in init["result"], "initialize : nom du serveur et instructions")
 rpc("notifications/initialized", notify=True)
 tools = [t["name"] for t in rpc("tools/list")["result"]["tools"]]
-check(sorted(tools) == sorted(["tapes_list_targets", "tapes_start", "tapes_mark", "tapes_status", "tapes_stop", "tapes_list"]), f"tools/list : {len(tools)} outils")
+check(sorted(tools) == sorted(["tapes_list_targets", "tapes_start", "tapes_mark", "tapes_status", "tapes_stop", "tapes_list", "tapes_finish", "tapes_export"]), f"tools/list : {len(tools)} outils")
 check(rpc("ping")["result"] == {}, "ping")
 check("error" in rpc("inconnu"), "méthode inconnue : erreur JSON-RPC")
 
@@ -61,6 +61,15 @@ err, lst = call("tapes_list", limit=3)
 check(not err and lst and lst[0]["origin"] == "mcp" and lst[0]["state"] == "complete", "tapes_list : la prise est en tête, origine mcp")
 
 path = stop["tape_path"]
+err, fin = call("tapes_finish", tape_path=path, preset="release")
+check(not err and fin["canvas"] == "1920x1080" and len(fin["captions"]) == 3 and len(fin["zooms"]) >= 1, f"tapes_finish : {len(fin['zooms'])} zoom(s), {len(fin['captions'])} légendes" if not err else str(fin))
+err, bad = call("tapes_finish", tape_path="/etc/passwd")
+check(err, "tapes_finish refuse un chemin hors de ~/Movies/mTAPES")
+err, exp = call("tapes_export", tape_path=path, destination="release")
+check(not err and exp["size"] == "1920x1080" and exp["megabytes"] > 0.05, f"tapes_export : {exp.get('size')}, {exp.get('megabytes')} Mo en {exp.get('render_s')} s" if not err else str(exp))
+if not err:
+    d = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", exp["path"]], capture_output=True, text=True).stdout)
+    check(abs(d - exp["duration_s"]) < 0.4 and d > 2, f"film exporté lisible, durée {d:.2f} s")
 events = [json.loads(l) for l in open(os.path.join(path, "events.jsonl")) if l.strip()]
 declared = [e for e in events if e["source"] == "declared"]
 check([e["label"] for e in declared] == ["Lancement", "Choisir un dossier", "Nom de la sauvegarde"], "events.jsonl : 3 actions annoncées, dans l'ordre, avec leurs libellés")

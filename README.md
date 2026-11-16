@@ -23,18 +23,22 @@ and the Screen Recording permission. Design mockups: [`maquettes/index.html`](ma
 - **MCP server** so Claude Code, Codex, Cursor or any other AI can start a recording, announce its clicks, and get a finished demo (GIF for a README, MP4 for a release, vertical video for social networks).
 - Light files: adaptive frame rate, hardware HEVC, optimized GIF.
 
-## MCP: let an AI record the demo
+## MCP: let an AI record and finish the demo
 
-The app embeds an MCP server (stdio) so Claude Code, Codex, Cursor or any MCP client can start a take, **announce each action it performs**, and stop. The marks become the editing script later (zooms and captions follow them).
-It is **off by default**: tick **AI control** in the mTAPES menu-bar menu (the menu-bar icon then shows "IA"). Nothing else can start a recording through the app without that consent.
+The app embeds an MCP server so Claude Code, Codex, Cursor or any MCP client can start a take, **announce each action it performs**, stop, then get a finished demo.
+It is **off by default**: tick **AI control** in the mTAPES menu-bar menu (the icon then shows "IA"). A client must also be **allowed once** ("Allow <client>" in the same menu, or in the **AI control…** window); nothing is recorded before that.
 
-```sh
-claude mcp add mtapes -- "/Applications/mTAPES.app/Contents/MacOS/mtapes-cli" mcp
-```
+- **One-click connection**: *AI control…* detects Claude Code, Claude Desktop, Cursor, Codex and Gemini CLI and connects them (your existing configuration is backed up and kept). Or by hand: `claude mcp add mtapes -- "/Applications/mTAPES.app/Contents/MacOS/mtapes-cli" mcp`.
+- **Clients without a command line** can use the optional local HTTP server (`http://127.0.0.1:47321/mcp`, bearer token, this computer only).
+- **Tools**: `tapes_list_targets`, `tapes_start` (screen, one window even if covered, one app, or a zone), `tapes_mark` (click, type, scroll, key, chapter, with position and a human label; `space=window` for window-relative positions), `tapes_status`, `tapes_stop`, `tapes_list`,
+  `tapes_finish` (plan zooms on the marked actions, speed up dead time, caption from your labels) and `tapes_export` (`readme` = light GIF, `release` = 1080p MP4, `short` = vertical 9:16 MP4).
+- Screen commands go to the app (which holds the Screen Recording permission) over a private Unix socket (mode 600, same user only); finishing and export run in the MCP process, one render at a time. A take also stops by itself after `max_seconds` (default 600).
+- Tests: `tests/mcp_e2e.py` (a real take driven over MCP, finished and exported).
 
-Tools: `tapes_list_targets`, `tapes_start` (screen, one window even if covered, one app, or a zone), `tapes_mark` (click, type, scroll, key, chapter, with position and a human label), `tapes_status`, `tapes_stop`, `tapes_list`.
-The server never films anything itself: it forwards to the app (which holds the Screen Recording permission) over a private Unix socket (mode 600, same user only), and launches the app in the background if needed. A take also stops by itself after `max_seconds` (default 600).
-End-to-end test: `tests/mcp_e2e.py`.
+## Automatic finishing
+
+A take is raw and untouched; the finishing layer (`finition.json`) is recomputed at will: zooms (eased) on the actions, dead time sped up, smoothed cursor redrawn with click ripples, captions from the labels the AI announced (never invented), rounded window on a gradient background with shadow, 16:9 or 9:16.
+`mtapes finish TAPE --preset release` then `mtapes export TAPE --dest release`. On a synthetic 8.8 s source the render takes about 1.4 s (1080p60) to 2 s (GIF); real demos have not been measured yet.
 
 ## What works today: the engine
 

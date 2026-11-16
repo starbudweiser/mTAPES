@@ -18,6 +18,12 @@ struct MTapesApp: App {
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(CommandLine.arguments.contains("--show") ? .presented : .suppressed)
 
+        Window(L.t("ai.title"), id: "ai") {
+            AIControlView(model: model)
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(CommandLine.arguments.contains("--show-ai") ? .presented : .suppressed)
+
         MenuBarExtra {
             Button(model.phase == .recording ? L.t("menu.stop") : L.t("menu.record")) { model.toggle() }
                 .disabled(model.phase == .finishing || (model.phase != .recording && !model.canRecord))
@@ -27,6 +33,15 @@ struct MTapesApp: App {
             Button(L.t("menu.open")) { openWindow(id: "main"); NSApp.activate() }
             Divider()
             Toggle(L.t("menu.mcp"), isOn: $model.mcpEnabled)
+            Button(L.t("menu.ai")) { openWindow(id: "ai"); NSApp.activate() }
+            ForEach(model.pendingClients, id: \.self) { c in
+                Button(L.t("menu.mcp.approve", c)) { model.approve(c) }
+            }
+            if !model.approvedClients.isEmpty {
+                Menu(L.t("menu.mcp.clients")) {
+                    ForEach(model.approvedClients, id: \.self) { c in Button(L.t("menu.mcp.revoke", c)) { model.revoke(c) } }
+                }
+            }
             Divider()
             Button(L.t("menu.about")) { About.show() }
             Button(L.t("menu.quit")) { NSApp.terminate(nil) }.keyboardShortcut("q")
@@ -44,7 +59,7 @@ struct MenuBarLabel: View {
             if model.phase == .recording {
                 Text(AppModel.clock(model.elapsed)).monospacedDigit().foregroundStyle(.red)
             } else if model.mcpEnabled && !model.unseen {
-                Text("IA").font(.system(size: 9, weight: .bold))   // le pilotage par IA est ouvert : jamais silencieux
+                Text(model.pendingClients.isEmpty ? "IA" : "IA ?").font(.system(size: 9, weight: .bold))   // le pilotage par IA est ouvert : jamais silencieux
             } else if model.unseen {
                 // Résultat ou erreur arrivé sans fenêtre ouverte (prise lancée au raccourci) : pastille, sans rien ouvrir.
                 if case .failed = model.phase { Text("!").bold().foregroundStyle(.orange) } else { Text("✓").bold().foregroundStyle(.green) }
@@ -98,6 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         RemoteControl.shared.apply(enabled: false)   // supprime le socket : pas de fichier orphelin
+        RemoteControl.shared.applyHTTP(enabled: false)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -114,6 +130,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         RemoteControl.shared.apply(enabled: AppModel.shared.mcpEnabled)
+        RemoteControl.shared.applyHTTP(enabled: AppModel.shared.mcpHTTPEnabled)
         // ⌥⌘R : touche R (code 15), modificateurs Commande (256) + Option (2048).
         HotKey.register(keyCode: 15, modifiers: 256 | 2048) {
             Task { @MainActor in AppModel.shared.toggle() }
@@ -135,6 +152,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if opt("--kind") == "window" { model.kind = .window }
         let scheme = opt("--scheme") ?? "dark"
         Socle.apply(scheme == "light" ? .light : .dark)
+        if opt("--view") == "ai" {
+            // Rendu de la fenêtre « Pilotage par IA » : les réglages sont forcés le temps du rendu puis rétablis (rien ne reste activé).
+            let oldMCP = UserDefaults.standard.bool(forKey: "mcpEnabled"), oldHTTP = UserDefaults.standard.bool(forKey: "mcpHTTPEnabled")
+            model.mcpEnabled = true; model.mcpHTTPEnabled = true
+            model.pendingClients = ["codex"]; model.approvedClients = ["claude-code"]
+            let aiView = AIControlView(model: model).environment(\.colorScheme, scheme == "light" ? .light : .dark)
+            let r = ImageRenderer(content: aiView); r.scale = 2
+            if let image = r.nsImage, let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: URL(fileURLWithPath: path)); print("RENDER OK \(path)")
+            }
+            model.mcpEnabled = oldMCP; model.mcpHTTPEnabled = oldHTTP
+            UserDefaults.standard.set(["essai"], forKey: "mcpApprovedClients")
+            exit(0)
+        }
         let view = SimpleView(model: model)
             .environment(\.colorScheme, scheme == "light" ? .light : .dark)
         let renderer = ImageRenderer(content: view)

@@ -132,6 +132,8 @@ public struct TapePackage {
     public var eventsURL: URL { url.appendingPathComponent("events.jsonl") }
     public var pointerURL: URL { url.appendingPathComponent("pointer.bin") }
     public var metaURL: URL { url.appendingPathComponent("meta.json") }
+    public var finishingURL: URL { url.appendingPathComponent("finition.json") }
+    public var exportsURL: URL { url.appendingPathComponent("exports", isDirectory: true) }
 
     public init(url: URL) { self.url = url }
 

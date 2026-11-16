@@ -114,3 +114,132 @@ final class ControlTests: XCTestCase {
         XCTAssertFalse(ControlClient.isReachable(path: path))
     }
 }
+
+final class FinishingTests: XCTestCase {
+    private func meta(duration: Double) -> TapeMeta {
+        TapeMeta(id: "t", name: "t", created: Date(), origin: "mcp", client: nil,
+                 source: .init(kind: "display", bounds: [0, 0, 1000, 500], scale: 2), profile: "balanced", pixelFormat: "420v", codec: "hevc-main",
+                 maxFPS: 60, width: 2000, height: 1000, durationSeconds: duration, firstFramePTS: 0, stats: .init())
+    }
+
+    func testTimelineMapsSourceAndOutputTime() {
+        let t = FinishingSpec.Timeline(speeds: [.init(t0: 2, t1: 10, factor: 4)], sourceDuration: 12)
+        XCTAssertEqual(t.outputDuration, 2 + 2 + 2, accuracy: 1e-9)           // 2 s normales, 8 s ÷ 4, 2 s normales
+        XCTAssertEqual(t.sourceTime(forOutput: 1), 1, accuracy: 1e-9)
+        XCTAssertEqual(t.sourceTime(forOutput: 3), 6, accuracy: 1e-9)         // 1 s dans la partie accélérée = 4 s de source
+        XCTAssertEqual(t.outputTime(forSource: 10), 4, accuracy: 1e-9)
+        XCTAssertEqual(t.sourceTime(forOutput: 5), 11, accuracy: 1e-9)
+    }
+
+    func testPlannerGroupsActionsIntoZoomsAndSpeedsUpDeadTime() {
+        let events = [
+            TapeEvent(t: 1.0, kind: "click", x: 400, y: 100, source: "declared", label: "Ouvrir"),
+            TapeEvent(t: 1.8, kind: "click", x: 450, y: 120, source: "detected"),
+            TapeEvent(t: 9.0, kind: "click", x: 800, y: 400, source: "declared", label: "Valider"),
+        ]
+        let spec = Planner.plan(.init(meta: meta(duration: 12), events: events), preset: .release)
+        XCTAssertEqual(spec.zooms.count, 2)                                   // deux groupes : 1,0-1,8 s puis 9,0 s
+        XCTAssertEqual(spec.zooms[0].fx, 0.425, accuracy: 0.01)               // centre des deux premiers clics, en 0…1
+        XCTAssertGreaterThanOrEqual(spec.zooms[0].scale, 1.5)
+        XCTAssertLessThanOrEqual(spec.zooms[0].scale, 2.2)
+        XCTAssertEqual(spec.speeds.count, 1)                                  // 1,8 → 9,0 : plus de 3 s sans action
+        XCTAssertEqual(spec.captions.map(\.text), ["Ouvrir", "Valider"])      // seulement les libellés annoncés
+        XCTAssertEqual(spec.canvas.width, 1920)
+    }
+
+    func testPlannerIgnoresOutOfBoundsAndUnlabelledCaptions() {
+        let events = [TapeEvent(t: 1, kind: "click", x: 5000, y: 5000, source: "declared", label: "Hors écran"),
+                      TapeEvent(t: 2, kind: "click", x: 10, y: 10, source: "detected")]
+        let spec = Planner.plan(.init(meta: meta(duration: 5), events: events), preset: .short)
+        XCTAssertEqual(spec.zooms.count, 1)                                   // le clic hors de la prise est ignoré pour le zoom
+        XCTAssertEqual(spec.canvas.height, 1920)
+        XCTAssertTrue(spec.canvas.fill)
+    }
+
+    func testZoomStateEasesInAndOut() {
+        var spec = FinishingSpec(preset: "release", fps: 60, canvas: FinishingPreset.release.canvas)
+        spec.zooms = [.init(t0: 2, t1: 4, scale: 2, fx: 0.25, fy: 0.75)]
+        XCTAssertEqual(spec.zoomState(at: 0).scale, 1, accuracy: 1e-9)
+        XCTAssertEqual(spec.zoomState(at: 3).scale, 2, accuracy: 1e-9)
+        let mid = spec.zoomState(at: 1.775)                                   // à mi-entrée
+        XCTAssertGreaterThan(mid.scale, 1.3); XCTAssertLessThan(mid.scale, 1.7)
+        XCTAssertEqual(spec.zoomState(at: 3).fx, 0.25, accuracy: 1e-9)
+        XCTAssertEqual(spec.zoomState(at: 10).scale, 1, accuracy: 1e-9)
+    }
+
+    func testSpecRoundTrip() throws {
+        var spec = Planner.plan(.init(meta: meta(duration: 12), events: [TapeEvent(t: 1, kind: "click", x: 100, y: 100, source: "declared", label: "A")]), preset: .readme)
+        spec.captions.append(.init(t0: 0, t1: 1, text: "Texte"))
+        let data = try JSONEncoder().encode(spec)
+        XCTAssertEqual(try JSONDecoder().decode(FinishingSpec.self, from: data), spec)
+    }
+}
+
+final class ConnectorTests: XCTestCase {
+    func home() throws -> URL {
+        let h = FileManager.default.temporaryDirectory.appendingPathComponent("mtapes-home-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: h, withIntermediateDirectories: true)
+        return h
+    }
+
+    func testJSONConnectorMergesAndBacksUp() throws {
+        let h = try home(); defer { try? FileManager.default.removeItem(at: h) }
+        let dir = h.appendingPathComponent(".cursor"); try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let cfg = dir.appendingPathComponent("mcp.json")
+        try Data(#"{"mcpServers":{"autre":{"command":"x"}},"theme":"dark"}"#.utf8).write(to: cfg)
+        XCTAssertEqual(Connectors.list(home: h).first { $0.id == "cursor" }?.status, .detected)
+        try Connectors.connect(id: "cursor", cli: "/Apps/mTAPES.app/Contents/MacOS/mtapes-cli", home: h)
+        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: cfg)) as! [String: Any]
+        let servers = json["mcpServers"] as! [String: Any]
+        XCTAssertNotNil(servers["autre"]); XCTAssertNotNil(servers["mtapes"]); XCTAssertEqual(json["theme"] as? String, "dark")   // rien d'existant n'est perdu
+        XCTAssertTrue(FileManager.default.fileExists(atPath: cfg.path + ".mtapes-backup"))
+        XCTAssertEqual(Connectors.list(home: h).first { $0.id == "cursor" }?.status, .connected)
+    }
+
+    func testTOMLConnectorIsIdempotent() throws {
+        let h = try home(); defer { try? FileManager.default.removeItem(at: h) }
+        let dir = h.appendingPathComponent(".codex"); try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let cfg = dir.appendingPathComponent("config.toml"); try Data("model = \"x\"".utf8).write(to: cfg)
+        try Connectors.connect(id: "codex", cli: "/cli", home: h)
+        try Connectors.connect(id: "codex", cli: "/cli", home: h)
+        let text = try String(contentsOf: cfg, encoding: .utf8)
+        XCTAssertEqual(text.components(separatedBy: "[mcp_servers.mtapes]").count - 1, 1)
+        XCTAssertTrue(text.hasPrefix("model = \"x\""))
+    }
+
+    func testUnreadableJSONIsNotOverwritten() throws {
+        let h = try home(); defer { try? FileManager.default.removeItem(at: h) }
+        let dir = h.appendingPathComponent(".gemini"); try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let cfg = dir.appendingPathComponent("settings.json"); try Data("pas du json".utf8).write(to: cfg)
+        XCTAssertThrowsError(try Connectors.connect(id: "gemini", cli: "/cli", home: h))
+        XCTAssertEqual(try String(contentsOf: cfg, encoding: .utf8), "pas du json")
+    }
+
+    func testHTTPServerAuthAndRouting() async throws {
+        let core = MCPCore { method, _ in .init(id: 1, ok: true, result: .object(["phase": .string("idle")])) }
+        let port: UInt16 = 47390
+        let server = MCPHTTPServer(port: port, token: "secret-token-secret-token-secret-token", core: core)
+        try server.start(); defer { server.stop() }
+        try await Task.sleep(nanoseconds: 300_000_000)
+        func post(_ body: String, token: String?) async throws -> (Int, Data, [AnyHashable: Any]) {
+            var req = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+            req.httpMethod = "POST"; req.httpBody = Data(body.utf8)
+            if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            let r = resp as! HTTPURLResponse
+            return (r.statusCode, data, r.allHeaderFields)
+        }
+        let init1 = try await post(#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"clientInfo":{"name":"essai"}}}"#, token: "secret-token-secret-token-secret-token")
+        XCTAssertEqual(init1.0, 200); XCTAssertNotNil(init1.2["Mcp-Session-Id"])
+        let list = try await post(#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#, token: "secret-token-secret-token-secret-token")
+        XCTAssertEqual(list.0, 200)
+        let tools = ((try JSONSerialization.jsonObject(with: list.1) as! [String: Any])["result"] as! [String: Any])["tools"] as! [Any]
+        XCTAssertEqual(tools.count, 8)
+        let noToken = try await post(#"{"jsonrpc":"2.0","id":3,"method":"ping"}"#, token: nil)
+        XCTAssertEqual(noToken.0, 401)
+        let badToken = try await post(#"{"jsonrpc":"2.0","id":3,"method":"ping"}"#, token: "mauvais")
+        XCTAssertEqual(badToken.0, 401)
+        let note = try await post(#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#, token: "secret-token-secret-token-secret-token")
+        XCTAssertEqual(note.0, 202)
+    }
+}

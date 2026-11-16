@@ -36,6 +36,25 @@ final class AppModel: ObservableObject {
     @Published var unseen: Bool = false
     @Published var lastSummary: TapeSummary?
     /// Pilotage par IA (MCP) : désactivé par défaut ; tant qu'il est coché dans le menu, un socket privé accepte les commandes du même utilisateur.
+    /// Accord par client MCP (nom annoncé à l'initialisation) : un client inconnu est mis en attente et ne peut rien faire avant votre accord.
+    @Published var approvedClients: [String] = UserDefaults.standard.stringArray(forKey: "mcpApprovedClients") ?? []
+    @Published var pendingClients: [String] = []
+    func approve(_ client: String) {
+        pendingClients.removeAll { $0 == client }
+        if !approvedClients.contains(client) { approvedClients.append(client) }
+        UserDefaults.standard.set(approvedClients, forKey: "mcpApprovedClients")
+    }
+    func revoke(_ client: String) {
+        approvedClients.removeAll { $0 == client }
+        UserDefaults.standard.set(approvedClients, forKey: "mcpApprovedClients")
+    }
+    /// Serveur HTTP local (clients sans ligne de commande) : désactivé par défaut, jeton obligatoire.
+    @Published var mcpHTTPEnabled: Bool = UserDefaults.standard.bool(forKey: "mcpHTTPEnabled") {
+        didSet {
+            UserDefaults.standard.set(mcpHTTPEnabled, forKey: "mcpHTTPEnabled")
+            RemoteControl.shared.applyHTTP(enabled: mcpHTTPEnabled)
+        }
+    }
     @Published var mcpEnabled: Bool = UserDefaults.standard.bool(forKey: "mcpEnabled") {
         didSet {
             UserDefaults.standard.set(mcpEnabled, forKey: "mcpEnabled")

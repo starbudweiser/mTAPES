@@ -88,3 +88,16 @@ perdues et la mémoire). La tenue, elle, est confirmée : aucune image perdue, a
   Une première prise d'un binaire fraîchement signé a perdu 22 images sur 61 (non reproduit ensuite, ni avec l'encodeur froid) : à surveiller.
 - **Mémoire** : les 43-49 Mo mesurés sont le pic du processus ; une partie est faite de tampons IOSurface de la capture.
 - **Plantage** : vérifié (kill -9 à ~10 s) : brut lisible (10 s), événements, trajectoire et métadonnées présents.
+
+## Finition et export (16/11/2026)
+
+Source synthétique 2560 × 1440 (12 s, 481 images à cadence variable, ProRes), calque planifié (2 zooms, 1 temps mort ×4, 6 légendes) :
+
+| Destination | Film | Rendu | Poids |
+| --- | --- | --- | --- |
+| release (MP4 1920 × 1080, 60 i/s) | 8,8 s | 1,4 s | 5,9 Mo (débit par défaut 5,3 Mb/s) |
+| short (MP4 1080 × 1920, 60 i/s) | 8,8 s | 1,4 s | 5,8 Mo |
+| readme (GIF 800 × 450, 12 i/s, ≤ 9,5 Mo) | 8,8 s | 2,0 s (+ ffmpeg) | 7,7 Mo |
+
+Composition Core Image : ≈ 5 ms par image (graphe 0,1 ms, rendu 4,6 ms). **Erreur corrigée** : les premières mesures (22 à 60 s) comptaient l'attente derrière les calculs de la file `calcul-lourd` ; `renderSeconds` ne compte plus que le rendu, `queuedSeconds` l'attente.
+Limites : source synthétique ; qualité visuelle des films non mesurée (SSIM) ; le GIF dépend de `ffmpeg` s'il est présent (palette adaptative), sinon ImageIO (plus lourd) ; aucun essai sur une vraie démo longue.
