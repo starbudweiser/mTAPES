@@ -225,24 +225,43 @@ struct EditorPanel: View {
             }
             if let error { Text(error).socle(Socle.T.meta).foregroundStyle(Socle.C.danger).fixedSize(horizontal: false, vertical: true) }
             if let spec {
-                group(L.t("ed.zooms"), empty: spec.zooms.isEmpty) {
+                group(L.t("ed.zooms"), empty: spec.zooms.isEmpty, add: { edit { $0.zooms.append(.init(t0: 0, t1: min(2, seconds), scale: 1.8, fx: 0.5, fy: 0.5, source: "manual")) } }) {
                     ForEach(Array(spec.zooms.enumerated()), id: \.offset) { i, z in
-                        row(L.t("ed.zoom.row", fmt(z.scale), time(z.t0), time(z.t1)), by: z.source) { edit { $0.zooms.remove(at: i) } }
-                    }
-                }
-                group(L.t("ed.speeds"), empty: spec.speeds.isEmpty) {
-                    ForEach(Array(spec.speeds.enumerated()), id: \.offset) { i, v in
-                        row(L.t("ed.speed.row", fmt(v.factor), time(v.t0), time(v.t1)), by: nil) { edit { $0.speeds.remove(at: i) } }
-                    }
-                }
-                group(L.t("ed.captions"), empty: spec.captions.isEmpty) {
-                    ForEach(Array(spec.captions.enumerated()), id: \.offset) { i, c in
                         HStack(spacing: Socle.M.space2) {
-                            Text(time(c.t0)).socle(Socle.T.mono).foregroundStyle(Socle.C.textMuted).frame(width: 56, alignment: .leading)
-                            TextField("", text: Binding(get: { c.text }, set: { v in edit { if $0.captions.indices.contains(i) { $0.captions[i].text = v } } }))
+                            num(L.t("ed.f.from"), z.t0) { v in edit { if $0.zooms.indices.contains(i) { $0.zooms[i].t0 = clampT(v, below: $0.zooms[i].t1) ; $0.zooms[i].source = "manual" } } }
+                            num(L.t("ed.f.to"), z.t1) { v in edit { if $0.zooms.indices.contains(i) { $0.zooms[i].t1 = clampT(v, above: $0.zooms[i].t0); $0.zooms[i].source = "manual" } } }
+                            num(L.t("ed.f.scale"), z.scale) { v in edit { if $0.zooms.indices.contains(i) { $0.zooms[i].scale = min(3, max(1.1, v)); $0.zooms[i].source = "manual" } } }
+                            num("x", z.fx) { v in edit { if $0.zooms.indices.contains(i) { $0.zooms[i].fx = min(1, max(0, v)); $0.zooms[i].source = "manual" } } }
+                            num("y", z.fy) { v in edit { if $0.zooms.indices.contains(i) { $0.zooms[i].fy = min(1, max(0, v)); $0.zooms[i].source = "manual" } } }
+                            SocleChip(text: L.t("ed.by." + (["auto", "ai", "manual"].contains(z.source) ? z.source : "manual")))
+                            Spacer(minLength: 0)
+                            deleteButton { edit { $0.zooms.remove(at: i) } }
+                        }
+                    }
+                }
+                group(L.t("ed.speeds"), empty: spec.speeds.isEmpty, add: { edit { $0.speeds.append(.init(t0: 0, t1: min(2, seconds), factor: 4)) } }) {
+                    ForEach(Array(spec.speeds.enumerated()), id: \.offset) { i, v in
+                        HStack(spacing: Socle.M.space2) {
+                            num(L.t("ed.f.from"), v.t0) { x in edit { if $0.speeds.indices.contains(i) { $0.speeds[i].t0 = clampT(x, below: $0.speeds[i].t1) } } }
+                            num(L.t("ed.f.to"), v.t1) { x in edit { if $0.speeds.indices.contains(i) { $0.speeds[i].t1 = clampT(x, above: $0.speeds[i].t0) } } }
+                            num(L.t("ed.f.factor"), v.factor) { x in edit { if $0.speeds.indices.contains(i) { $0.speeds[i].factor = min(16, max(0.25, x)) } } }
+                            Spacer(minLength: 0)
+                            deleteButton { edit { $0.speeds.remove(at: i) } }
+                        }
+                    }
+                }
+                group(L.t("ed.captions"), empty: spec.captions.isEmpty, add: { edit { $0.captions.append(.init(t0: 0, t1: min(2, seconds), text: L.t("ed.newcaption"))) } }) {
+                    ForEach(Array(spec.captions.enumerated()), id: \.offset) { i, c in
+                        VStack(alignment: .leading, spacing: Socle.M.space1_5) {
+                            HStack(spacing: Socle.M.space2) {
+                                num(L.t("ed.f.from"), c.t0) { x in edit { if $0.captions.indices.contains(i) { $0.captions[i].t0 = clampT(x, below: $0.captions[i].t1) } } }
+                                num(L.t("ed.f.to"), c.t1) { x in edit { if $0.captions.indices.contains(i) { $0.captions[i].t1 = clampT(x, above: $0.captions[i].t0) } } }
+                                Spacer(minLength: 0)
+                                deleteButton { edit { $0.captions.remove(at: i) } }
+                            }
+                            TextField("", text: Binding(get: { c.text }, set: { v in edit { if $0.captions.indices.contains(i) { $0.captions[i].text = String(v.prefix(80)) } } }))
                                 .textFieldStyle(.plain).socle(Socle.T.body).modifier(SocleField(multiline: false))
                                 .accessibilityLabel(L.t("ed.captions") + " " + time(c.t0))
-                            deleteButton { edit { $0.captions.remove(at: i) } }
                         }
                     }
                 }
@@ -252,9 +271,13 @@ struct EditorPanel: View {
         .onAppear(perform: load)
     }
 
-    private func group<C: View>(_ title: String, empty: Bool, @ViewBuilder _ content: () -> C) -> some View {
+    private func group<C: View>(_ title: String, empty: Bool, add: @escaping () -> Void, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: Socle.M.space1_5) {
-            Text(title).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+            HStack {
+                Text(title).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+                Spacer()
+                Button(L.t("ed.add")) { add() }.buttonStyle(SocleButtonStyle(.tertiary, height: 26)).fixedSize().accessibilityLabel(L.t("ed.add") + " " + title)
+            }
             if empty { Text(L.t("ed.none")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle) } else { content() }
         }
     }
@@ -271,6 +294,21 @@ struct EditorPanel: View {
     private func deleteButton(_ action: @escaping () -> Void) -> some View {
         Button(action: action) { Image(systemName: "trash") }
             .buttonStyle(SocleButtonStyle(.tertiary, height: 28)).fixedSize().accessibilityLabel(L.t("ed.delete"))
+    }
+
+    /// Champ numérique compact (secondes, échelle, facteur…), validé à la fin de la saisie.
+    private func num(_ label: String, _ value: Double, _ set: @escaping (Double) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(label).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle)
+            NumField(value: value, label: label, set: set)
+        }
+    }
+
+    private func clampT(_ v: Double, below end: Double? = nil, above start: Double? = nil) -> Double {
+        var t = min(max(0, v), seconds)
+        if let end { t = min(t, max(0, end - 0.5)) }
+        if let start { t = max(t, min(seconds, start + 0.5)) }
+        return t
     }
 
     private func fmt(_ v: Double) -> String { String(format: "%.1f", locale: L.locale, v) }
@@ -298,5 +336,33 @@ struct EditorPanel: View {
             try Finisher.save(s, to: package)
             spec = s
         } catch { self.error = L.t("ed.fail", "\(error)") }
+    }
+}
+
+
+private struct NumField: View {
+    let value: Double
+    let label: String
+    let set: (Double) -> Void
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField("", text: $text)
+            .textFieldStyle(.plain).socle(Socle.T.mono).modifier(SocleField(multiline: false))
+            .frame(width: 62)
+            .focused($focused)
+            .accessibilityLabel(label)
+            .onAppear { text = format(value) }
+            .onChange(of: value) { _, v in if !focused { text = format(v) } }
+            .onSubmit(commit)
+            .onChange(of: focused) { _, f in if !f { commit() } }
+    }
+
+    private func format(_ v: Double) -> String { String(format: "%.2f", locale: L.locale, v) }
+    private func commit() {
+        let cleaned = text.replacingOccurrences(of: ",", with: ".")
+        if let v = Double(cleaned) { set(v) }
+        text = format(value)
     }
 }
