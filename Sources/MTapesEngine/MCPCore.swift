@@ -109,7 +109,7 @@ public struct MCPCore: Sendable {
             let version = params?["protocolVersion"] as? String ?? "2025-03-26"
             if let info = params?["clientInfo"] as? [String: Any], let n = info["name"] as? String, !n.isEmpty { clientName = n }
             return reply(["protocolVersion": version, "capabilities": ["tools": [String: Any](), "prompts": [String: Any]()],
-                          "serverInfo": ["name": "mtapes", "version": "0.4.0"], "instructions": Self.instructions])
+                          "serverInfo": ["name": "mtapes", "version": "0.5.0"], "instructions": Self.instructions])
         case "ping":
             return reply([:])
         case "prompts/list":
