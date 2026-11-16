@@ -52,7 +52,7 @@ struct MTapesApp: App {
             Divider()
             if model.mode == .advanced {
                 Button(L.t("menu.library")) { openWindow(id: "library"); NSApp.activate() }
-                Toggle(L.t("menu.mcp"), isOn: $model.mcpEnabled)
+                Toggle(L.t("ai.enable"), isOn: $model.mcpEnabled)
                 Button(L.t("menu.ai")) { openWindow(id: "ai"); NSApp.activate() }
             }
             Button(L.t("menu.setup")) { openWindow(id: "setup"); NSApp.activate() }
