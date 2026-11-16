@@ -34,3 +34,10 @@ FLAGS=()
 gh release create "$TAG" "$ZIP" "$ZIP.sha256" --target main --title "mTAPES $VERSION" --notes "$NOTES" "${FLAGS[@]}"
 git fetch -q --tags origin
 echo "✓ https://github.com/starbudweiser/mTAPES/releases/tag/$TAG"
+
+# Ma version locale suit toujours la release : on quitte proprement l'appli installée si elle tourne, puis on la remplace (signature locale).
+if pgrep -f "Applications Personnelles/mTAPES.app/Contents/MacOS/mTAPES" >/dev/null; then
+  osascript -e 'tell application id "fr.stephan.mtapes" to quit' >/dev/null 2>&1 || true
+  sleep 3
+fi
+env -u DEV NO_OPEN=1 ./build_app.sh >/dev/null && echo "✓ version locale installée : $VERSION"
