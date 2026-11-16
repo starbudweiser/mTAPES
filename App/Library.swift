@@ -1,5 +1,6 @@
 // mTAPES — bibliothèque des prises (mode Avancé) : liste à gauche, détail et exports à droite. Maquette 1.
 import SwiftUI
+import AVKit
 
 struct LibraryItem: Identifiable, Equatable {
     var id: String { url.path }
@@ -213,17 +214,33 @@ struct EditorPanel: View {
     let seconds: Double
     @State private var spec: FinishingSpec?
     @State private var error: String?
+    @State private var player: AVPlayer?
+    @State private var loadingPreview = false
 
     private var package: TapePackage { TapePackage(url: url) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Socle.M.space3) {
             HStack {
-                Text(L.t("ed.title")).socle(Socle.T.title).foregroundStyle(Socle.C.textStrong)
+                Text(L.t("ed.title")).socle(Socle.T.title).foregroundStyle(Socle.C.textStrong).fixedSize()
                 Spacer()
                 Button(L.t("ed.recompute")) { recompute() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
             }
+            HStack(spacing: Socle.M.space2) {
+                if player != nil {
+                    Button(L.t("ed.preview.refresh")) { startPreview() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
+                    Button(L.t("ed.preview.close")) { player?.pause(); player = nil }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
+                } else {
+                    Button(L.t("ed.preview")) { startPreview() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize().disabled(loadingPreview || spec == nil)
+                }
+                Spacer(minLength: 0)
+            }
             if let error { Text(error).socle(Socle.T.meta).foregroundStyle(Socle.C.danger).fixedSize(horizontal: false, vertical: true) }
+            if let player {
+                PreviewPlayer(player: player)
+                    .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: Socle.M.radiusMd, style: .continuous))
+            }
             if let spec {
                 group(L.t("ed.zooms"), empty: spec.zooms.isEmpty, add: { edit { $0.zooms.append(.init(t0: 0, t1: min(2, seconds), scale: 1.8, fx: 0.5, fy: 0.5, source: "manual")) } }) {
                     ForEach(Array(spec.zooms.enumerated()), id: \.offset) { i, z in
@@ -317,6 +334,26 @@ struct EditorPanel: View {
         return "\(m):" + (sec < 10 ? "0" : "") + String(format: "%.1f", locale: L.locale, sec)
     }
 
+    private func startPreview() {
+        guard let spec, !loadingPreview else { return }
+        loadingPreview = true
+        let pkg = package
+        Task {
+            do {
+                let item = try await Finisher.previewItem(pkg, spec: spec)
+                await MainActor.run {
+                    player?.pause()
+                    let p = AVPlayer(playerItem: item)
+                    player = p
+                    p.play()
+                    loadingPreview = false
+                }
+            } catch {
+                await MainActor.run { self.error = L.t("ed.fail", "\(error)"); loadingPreview = false }
+            }
+        }
+    }
+
     private func load() {
         do { spec = try Finisher.loadOrPlan(package, preset: .release) }
         catch { self.error = L.t("ed.fail", "\(error)") }
@@ -365,4 +402,13 @@ private struct NumField: View {
         if let v = Double(cleaned) { set(v) }
         text = format(value)
     }
+}
+
+/// Lecteur vidéo natif, commandes en ligne.
+private struct PreviewPlayer: NSViewRepresentable {
+    let player: AVPlayer
+    func makeNSView(context: Context) -> AVPlayerView {
+        let v = AVPlayerView(); v.controlsStyle = .inline; v.player = player; return v
+    }
+    func updateNSView(_ v: AVPlayerView, context: Context) { if v.player !== player { v.player = player } }
 }

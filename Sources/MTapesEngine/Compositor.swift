@@ -301,6 +301,14 @@ public enum Finisher {
         try encoder.encode(spec).write(to: package.finishingURL, options: .atomic)
     }
 
+    /// Lecture en direct de la prise avec la finition appliquée (aperçu de l'éditeur) : le même graphe que l'export.
+    public static func previewItem(_ package: TapePackage, spec: FinishingSpec) async throws -> AVPlayerItem {
+        let built = try await build(package, spec: spec)
+        let item = AVPlayerItem(asset: built.composition)
+        item.videoComposition = built.videoComposition
+        return item
+    }
+
     struct Built {
         var composition: AVMutableComposition
         var videoComposition: AVMutableVideoComposition
