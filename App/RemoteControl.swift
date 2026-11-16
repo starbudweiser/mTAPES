@@ -73,12 +73,16 @@ final class RemoteControl {
                 guard !model.isBusy else { throw ControlError("A take is already running (phase: \(phaseName(model))). Call tapes_stop first.") }
                 let target = try parseTarget(p)
                 let profile = QualityProfile(rawValue: p?["profile"]?.string ?? "balanced") ?? .balanced
+                let audio = p?["audio"]?.string ?? "none"
+                guard let color = ColorChoice(rawValue: p?["color"]?.string ?? "srgb") else { throw ControlError("color must be srgb or p3.") }
+                guard ["none", "system", "mic", "both"].contains(audio) else { throw ControlError("audio must be none, system, mic or both.") }
                 model.problem = nil
                 model.systemStop = nil
                 model.phase = .starting
                 do {
                     try await model.beginTake(target: target, origin: "mcp", client: p?["client"]?.string, name: p?["name"]?.string,
-                                              profile: profile, maxSeconds: p?["max_seconds"]?.int ?? 600)
+                                              profile: profile, maxSeconds: p?["max_seconds"]?.int ?? 600,
+                                              system: ["system", "both"].contains(audio), mic: ["mic", "both"].contains(audio), color: color)
                 } catch {
                     model.screenAllowed = Permissions.screenRecording
                     model.phase = .failed(AppModel.explain(error))
@@ -114,7 +118,7 @@ final class RemoteControl {
                 }
                 if let problem = model.problem { r["problem"] = .string(problem) }
                 if let why = model.systemStop {
-                    r["stopped_by"] = .string(why == "lock" ? "screen locked" : "Mac sleep")
+                    r["stopped_by"] = .string(Self.stopReason(why))
                     if let last = model.lastSummary { r["tape_path"] = .string(last.url.path) }
                 }
                 return ok(request, r)
@@ -124,7 +128,7 @@ final class RemoteControl {
                 if model.phase != .recording, let why = model.systemStop, let s = model.lastSummary {
                     return ok(request, ["tape_path": .string(s.url.path), "duration_s": .number((s.seconds * 100).rounded() / 100),
                                         "megabytes": .number((Double(s.bytes) / 10_000).rounded() / 100), "frames": .number(Double(s.frames)),
-                                        "frames_refused": .number(Double(s.dropped)), "stopped_by": .string(why == "lock" ? "screen locked" : "Mac sleep")])
+                                        "frames_refused": .number(Double(s.dropped)), "stopped_by": .string(Self.stopReason(why))])
                 }
                 guard model.phase == .recording else { throw ControlError("No take is recording.") }
                 switch await model.finishTake() {
@@ -147,6 +151,8 @@ final class RemoteControl {
             return .failure(request.id, "\(error)")
         }
     }
+
+    static func stopReason(_ why: String) -> String { why == "lock" ? "screen locked" : (why == "display" ? "display resolution changed" : "Mac sleep") }
 
     private func ok(_ r: ControlRequest, _ result: [String: JSONValue]) -> ControlResponse { .init(id: r.id, ok: true, result: .object(result)) }
     private func ok(_ r: ControlRequest, _ result: JSONValue) -> ControlResponse { .init(id: r.id, ok: true, result: result) }

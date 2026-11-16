@@ -59,7 +59,8 @@ public enum Exporter {
             if destination.isGIF {
                 let mp4 = outDir.appendingPathComponent(".gif-source.mp4")
                 defer { try? FileManager.default.removeItem(at: mp4) }
-                let video = try await renderMP4(package, spec: finishing, to: mp4, targetMegabytes: 6, progress: { progress?($0 * 0.8) })
+                var gifSpec = finishing; gifSpec.colors = "srgb"                // le GIF n'a pas d'espace étiqueté : toujours sRGB
+                let video = try await renderMP4(package, spec: gifSpec, to: mp4, targetMegabytes: 6, withAudio: false, progress: { progress?($0 * 0.8) })
                 let gif = outDir.appendingPathComponent(destination.fileName)
                 try GIFEncoder.encode(mp4: mp4, to: gif, maxMegabytes: target ?? 9.5, sourceWidth: finishing.canvas.width)
                 progress?(1)
@@ -78,8 +79,8 @@ public enum Exporter {
     }
 
     /// Rend le film : compositeur, lecteur, écrivain H.264 au débit calculé pour viser `targetMegabytes` (sinon un débit adapté au format).
-    static func renderMP4(_ package: TapePackage, spec: FinishingSpec, to url: URL, targetMegabytes: Double?, progress: (@Sendable (Double) -> Void)?) async throws -> (duration: Double, bytes: Int64) {
-        let built = try await Finisher.build(package, spec: spec)
+    static func renderMP4(_ package: TapePackage, spec: FinishingSpec, to url: URL, targetMegabytes: Double?, withAudio: Bool = true, progress: (@Sendable (Double) -> Void)?) async throws -> (duration: Double, bytes: Int64) {
+        let built = try await Finisher.build(package, spec: spec, withAudio: withAudio)
         try? FileManager.default.removeItem(at: url)
 
         let reader = try AVAssetReader(asset: built.composition)
@@ -89,6 +90,15 @@ public enum Exporter {
         output.alwaysCopiesSampleData = false
         guard reader.canAdd(output) else { throw EngineError.writerFailed("lecture du film impossible") }
         reader.add(output)
+        var audioOutput: AVAssetReaderAudioMixOutput?
+        if built.hasAudio {
+            let a = AVAssetReaderAudioMixOutput(audioTracks: built.composition.tracks(withMediaType: .audio), audioSettings: [
+                AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48000, AVNumberOfChannelsKey: 2,
+                AVLinearPCMBitDepthKey: 32, AVLinearPCMIsFloatKey: true, AVLinearPCMIsBigEndianKey: false, AVLinearPCMIsNonInterleaved: false])
+            a.audioMix = built.audioMix
+            a.alwaysCopiesSampleData = false
+            if reader.canAdd(a) { reader.add(a); audioOutput = a }
+        }
 
         let pixels = Double(spec.canvas.width * spec.canvas.height)
         var bitrate = pixels * Double(spec.fps) * 0.045                          // débit par défaut, plafonné ensuite
@@ -96,42 +106,73 @@ public enum Exporter {
         if let mb = targetMegabytes, built.duration > 0 { bitrate = max(300_000, mb * 8_000_000 * 0.92 / built.duration) }
 
         let writer = try AVAssetWriter(url: url, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+        let outputP3 = (spec.colors ?? ((try? package.readMeta())?.colorSpace) ?? "srgb") == "p3"
+        var videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: spec.canvas.width, AVVideoHeightKey: spec.canvas.height,
             AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: Int(bitrate), AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
                                               AVVideoMaxKeyFrameIntervalKey: spec.fps * 2, AVVideoExpectedSourceFrameRateKey: spec.fps],
-        ])
+        ]
+        if outputP3 { videoSettings[AVVideoColorPropertiesKey] = VideoWriter.p3Tags }
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
         input.expectsMediaDataInRealTime = false
         guard writer.canAdd(input) else { throw EngineError.writerFailed("réglages d'export refusés") }
         writer.add(input)
+        var audioInput: AVAssetWriterInput?
+        if audioOutput != nil {
+            let ai = AVAssetWriterInput(mediaType: .audio, outputSettings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 48000, AVNumberOfChannelsKey: 2, AVEncoderBitRateKey: 128_000])
+            ai.expectsMediaDataInRealTime = false
+            if writer.canAdd(ai) { writer.add(ai); audioInput = ai }
+        }
         guard reader.startReading(), writer.startWriting() else { throw EngineError.writerFailed(writer.error?.localizedDescription ?? reader.error?.localizedDescription ?? "démarrage impossible") }
         writer.startSession(atSourceTime: .zero)
 
         let box = ExportBox(reader: reader, output: output, writer: writer, input: input, duration: built.duration, progress: progress)
+        let group = DispatchGroup()
+        let failure = FailureBox()
+        let queue = DispatchQueue(label: "mtapes.export")
+        group.enter()
+        input.requestMediaDataWhenReady(on: queue) {
+            while box.input.isReadyForMoreMediaData {
+                let tA = CFAbsoluteTimeGetCurrent()
+                if let sample = box.output.copyNextSampleBuffer() {
+                    let tB = CFAbsoluteTimeGetCurrent()
+                    box.input.append(sample)
+                    if ProcessInfo.processInfo.environment["MTAPES_PROFILE"] != nil { box.addTimes(read: tB - tA, write: CFAbsoluteTimeGetCurrent() - tB) }
+                    box.progress?(min(0.99, CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sample)) / max(0.1, box.duration)))
+                } else {
+                    box.input.markAsFinished()
+                    group.leave()
+                    return
+                }
+                if box.reader.status == .failed {
+                    failure.set(box.reader.error?.localizedDescription ?? "lecture du film")
+                    box.input.markAsFinished()
+                    group.leave()
+                    return
+                }
+            }
+        }
+        if let audioOutput, let audioInput {
+            group.enter()
+            audioInput.requestMediaDataWhenReady(on: queue) {
+                while audioInput.isReadyForMoreMediaData {
+                    if let sample = audioOutput.copyNextSampleBuffer() { audioInput.append(sample) }
+                    else { audioInput.markAsFinished(); group.leave(); return }
+                    if box.reader.status == .failed { audioInput.markAsFinished(); group.leave(); return }
+                }
+            }
+        }
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-            let queue = DispatchQueue(label: "mtapes.export")
-            input.requestMediaDataWhenReady(on: queue) {
-                while box.input.isReadyForMoreMediaData {
-                    let tA = CFAbsoluteTimeGetCurrent()
-                    if let sample = box.output.copyNextSampleBuffer() {
-                        let tB = CFAbsoluteTimeGetCurrent()
-                        box.input.append(sample)
-                        if ProcessInfo.processInfo.environment["MTAPES_PROFILE"] != nil { box.addTimes(read: tB - tA, write: CFAbsoluteTimeGetCurrent() - tB) }
-                        box.progress?(min(0.99, CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sample)) / max(0.1, box.duration)))
-                    } else {
-                        box.input.markAsFinished()
-                        box.writer.finishWriting {
-                            if box.writer.status == .completed { cont.resume() }
-                            else { cont.resume(throwing: EngineError.writerFailed(box.writer.error?.localizedDescription ?? "écriture du film")) }
-                        }
-                        return
-                    }
-                    if box.reader.status == .failed {
-                        box.input.markAsFinished()
-                        box.writer.cancelWriting()
-                        cont.resume(throwing: EngineError.writerFailed(box.reader.error?.localizedDescription ?? "lecture du film"))
-                        return
-                    }
+            group.notify(queue: queue) {
+                let why: String? = failure.value ?? (box.reader.status == .failed ? (box.reader.error?.localizedDescription ?? "lecture du film") : nil)
+                if let why {
+                    box.writer.cancelWriting()
+                    cont.resume(throwing: EngineError.writerFailed(why))
+                    return
+                }
+                box.writer.finishWriting {
+                    if box.writer.status == .completed { cont.resume() }
+                    else { cont.resume(throwing: EngineError.writerFailed(box.writer.error?.localizedDescription ?? "écriture du film")) }
                 }
             }
         }
@@ -139,6 +180,12 @@ public enum Exporter {
         let bytes = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)??.int64Value ?? 0
         return (built.duration, bytes)
     }
+}
+
+private final class FailureBox: @unchecked Sendable {
+    private let lock = NSLock(); private var why: String?
+    func set(_ s: String) { lock.lock(); why = why ?? s; lock.unlock() }
+    var value: String? { lock.lock(); defer { lock.unlock() }; return why }
 }
 
 private final class ExportBox: @unchecked Sendable {

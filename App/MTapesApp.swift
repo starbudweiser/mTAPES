@@ -191,7 +191,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let now = Date()
                 func item(_ n: String, _ s: Double, _ o: String, _ c: String?, _ ago: Double, _ ex: [(String, Int64)]) -> LibraryItem {
                     LibraryItem(url: URL(fileURLWithPath: "/tmp/\(n).tape"), name: n, created: now.addingTimeInterval(-ago), seconds: s, rawBytes: 41_000_000, origin: o, client: c, state: "complete",
-                                sourceKind: "window", windowTitle: "mBACKUP", marks: 11, exports: ex)
+                                sourceKind: "window", windowTitle: "mBACKUP", marks: 11, audio: ["system", "mic"], color: "srgb", exports: ex)
                 }
                 let items = [item("mBACKUP — première sauvegarde", 118, "mcp", "Claude Code", 3600, [("readme.gif", 7_800_000), ("release.mp4", 14_000_000)]),
                              item("mLINKS — ajout d'un raccourci", 48, "mcp", "Codex", 7200, []), item("Réglages de hERALD", 19, "manual", nil, 90000, [])]

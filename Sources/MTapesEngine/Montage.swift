@@ -17,11 +17,12 @@ public enum Montage {
         let meta = try package.readMeta()
         let events = (try? EventLog.decode(Data(contentsOf: package.eventsURL))) ?? []
         let b = meta.source.bounds
+        let geometry = GeometryTrack(meta: meta, events: events)
         var list: [[String: Any]] = []
-        for e in events.sorted(by: { $0.t < $1.t }).prefix(maxEventsInSummary) {
+        for e in events.filter({ $0.kind != "bounds" }).sorted(by: { $0.t < $1.t }).prefix(maxEventsInSummary) {
             var row: [String: Any] = ["t": r2(e.t), "kind": e.kind, "by": e.source]
             if let x = e.x, let y = e.y, b.count == 4, b[2] > 0, b[3] > 0 {
-                let nx = (x - b[0]) / b[2], ny = (y - b[1]) / b[3]
+                let (nx, ny) = geometry.normalize(x: x, y: y, at: e.t)
                 row["x"] = r2(nx); row["y"] = r2(ny)
                 if !(0...1).contains(nx) || !(0...1).contains(ny) { row["outside"] = true }   // hors de l'image filmée : à ne pas zoomer
             }
@@ -36,6 +37,10 @@ public enum Montage {
             "coordinates": "x and y are 0...1 across the filmed image (0,0 = top-left), the same system tapes_apply_plan uses for zoom centres.",
         ]
         if events.count > maxEventsInSummary { out["events_truncated"] = true }
+        if let tracks = meta.audio, !tracks.isEmpty {
+            out["audio"] = tracks.map { $0.kind }
+            out["audio_note"] = "The take has sound. It is kept at normal speed only: a sped-up stretch is muted, so never speed up a part where someone speaks."
+        }
         if let data = try? Data(contentsOf: package.finishingURL), let spec = try? JSONDecoder().decode(FinishingSpec.self, from: data) {
             out["current_plan"] = describe(spec, duration: meta.durationSeconds)
         }
@@ -150,6 +155,7 @@ public enum Montage {
     3. Dead time: speed up every stretch with no action for more than 2 s (factor 3-8), keeping 0.5-1 s of normal speed on both sides. Never speed up a result the viewer must read (a finished export, a dialog).
     4. Captions: 2-6 words, imperative or noun phrase ("Choose a folder", "Export as GIF"), one per step, shown 1.5-2.5 s from the action. Reuse your own mark labels; do not invent features that are not on screen.
     5. Length: aim for 15-45 s for a README GIF, 30-90 s for a release film, under 45 s for a short. Cut tempo, not content.
-    6. Call tapes_apply_plan with zooms, speeds, captions (times in seconds of the RAW take). Read its warnings and film_duration_s, fix anything odd, then tapes_export.
+    6. If the summary lists audio, the sound is kept only at normal speed: do not speed up a spoken part.
+    7. Call tapes_apply_plan with zooms, speeds, captions (times in seconds of the RAW take). Read its warnings and film_duration_s, fix anything odd, then tapes_export.
     """
 }

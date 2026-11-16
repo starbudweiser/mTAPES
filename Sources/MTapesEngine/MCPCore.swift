@@ -37,6 +37,8 @@ public struct MCPCore: Sendable {
                 "name": ["type": "string", "description": "Short name for the take (e.g. the feature being demonstrated)."],
                 "profile": ["type": "string", "enum": ["light", "balanced", "max"], "description": "Quality profile (default balanced)."],
                 "max_seconds": ["type": "integer", "description": "Safety limit; the take stops by itself after this many seconds (default 600)."],
+                "audio": ["type": "string", "enum": ["none", "system", "mic", "both"], "description": "Record sound as separate tracks: system = the Mac's sound (not mTAPES), mic = the microphone (the user may be asked to allow it), both. Default none. Sound is kept in exports at normal speed only."],
+                "color": ["type": "string", "enum": ["srgb", "p3"], "description": "Colour space of the take: srgb (default, right everywhere: web, README, GIF) or p3 (Display P3, more vivid on wide-gamut screens, Safari, QuickTime; GIF stays sRGB). HDR screens are filmed in SDR."],
                 "client": ["type": "string", "description": "Your name (e.g. Claude Code), recorded in the take."],
              ])],
             ["name": "tapes_mark",

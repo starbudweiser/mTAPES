@@ -23,7 +23,7 @@ rm -rf "${PWD:?}/mTAPES.app"
 env -u DEV -u FORCE NO_INSTALL=1 ./build_app.sh
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' mTAPES.app/Contents/Info.plist)" = "fr.stephan.mtapes" ] || { echo "Identifiant de paquet inattendu : release annulée." >&2; exit 1; }
 rm -rf "${DIST:?}"
-# Droits minimaux : aucun (pas de JIT ni de mémoire exécutable) ; la capture d'écran passe par l'autorisation de confidentialité, pas par un droit.
+# Droits minimaux : seulement l'entrée audio (micro, demandé à l'utilisateur au premier usage) ; ni JIT ni mémoire exécutable ; la capture d'écran passe par l'autorisation de confidentialité.
 APP_ENTITLEMENTS="$PWD/Resources/entitlements.plist" DIST="$DIST" /Volumes/SKYRIM/TOOLS/MAC/_tools/notarize_app.sh mTAPES.app
 ZIP="$DIST/mTAPES-$VERSION-macOS-arm64.zip"
 mv "$DIST/mTAPES.zip" "$ZIP"

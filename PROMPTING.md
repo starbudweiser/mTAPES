@@ -38,3 +38,7 @@ Times are seconds of the raw take. Omitted sections keep the current plan. Every
 - "Zoom closer on the buttons and add a caption for each step."
 - "Make a vertical short for social media."
 - "Show me frames at 5 s and 12 s, then fix the zoom that misses the button."
+
+## Sound
+
+If `tapes_start` was called with `audio` (system, mic or both), `tapes_summary` lists the tracks (`audio`). Sound is kept in the film at normal speed only: a sped-up stretch is muted. So never speed up a part where someone speaks, and keep zooms and captions in step with the voice. GIF exports have no sound.

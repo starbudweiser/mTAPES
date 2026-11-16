@@ -15,6 +15,8 @@ struct LibraryItem: Identifiable, Equatable {
     var sourceKind: String
     var windowTitle: String
     var marks: Int
+    var audio: [String]
+    var color: String
     var exports: [(name: String, bytes: Int64)]
     static func == (a: LibraryItem, b: LibraryItem) -> Bool { a.id == b.id && a.exports.count == b.exports.count && a.state == b.state }
 }
@@ -37,7 +39,7 @@ final class TakeStore: ObservableObject {
             let files = (try? fm.contentsOfDirectory(at: package.exportsURL, includingPropertiesForKeys: nil)) ?? []
             let exports = files.map { ($0.lastPathComponent, ((try? fm.attributesOfItem(atPath: $0.path)[.size] as? Int64) ?? 0) ?? 0) }.sorted { $0.0 < $1.0 }
             out.append(LibraryItem(url: url, name: meta.name, created: meta.created, seconds: meta.durationSeconds, rawBytes: raw, origin: meta.origin, client: meta.client,
-                                   state: meta.state ?? "complete", sourceKind: meta.source.kind, windowTitle: meta.source.windowTitle ?? "", marks: marks, exports: exports))
+                                   state: meta.state ?? "complete", sourceKind: meta.source.kind, windowTitle: meta.source.windowTitle ?? "", marks: marks, audio: (meta.audio ?? []).map { $0.kind }, color: meta.colorSpace ?? "srgb", exports: exports))
         }
         items = out.sorted { $0.created > $1.created }
     }
@@ -164,6 +166,8 @@ struct LibraryView: View {
                     fact(L.t("lib.src"), item.sourceKind == "display" ? L.t("lib.src.display") : L.t("lib.src.window", item.windowTitle.isEmpty ? "—" : item.windowTitle))
                     fact(L.t("lib.duration"), AppModel.clock(item.seconds))
                     fact(L.t("lib.size"), AppModel.megabytes(item.rawBytes))
+                    fact(L.t("lib.color"), item.color == "p3" ? "Display P3" : "sRGB")
+                    fact(L.t("lib.audio"), item.audio.isEmpty ? L.t("lib.audio.none") : item.audio.map { L.t("lib.audio." + $0) }.joined(separator: " + "))
                     if item.origin == "mcp" { fact(L.t("lib.marks"), "\(item.marks)") }
                 }
                 Text(L.t("lib.exports")).socle(Socle.T.title).foregroundStyle(Socle.C.textStrong)
@@ -216,6 +220,7 @@ struct EditorPanel: View {
     @State private var error: String?
     @State private var player: AVPlayer?
     @State private var loadingPreview = false
+    @State private var audioKinds: [String] = []
 
     private var package: TapePackage { TapePackage(url: url) }
 
@@ -280,6 +285,20 @@ struct EditorPanel: View {
                                 .textFieldStyle(.plain).socle(Socle.T.body).modifier(SocleField(multiline: false))
                                 .accessibilityLabel(L.t("ed.captions") + " " + time(c.t0))
                         }
+                    }
+                }
+                if !audioKinds.isEmpty {
+                    let a = spec.audio ?? FinishingSpec.Audio()
+                    VStack(alignment: .leading, spacing: Socle.M.space2) {
+                        Text(L.t("ed.audio")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+                        HStack(spacing: Socle.M.space3) {
+                            Toggle(L.t("ed.audio.keep"), isOn: Binding(get: { a.enabled }, set: { v in edit { var x = $0.audio ?? .init(); x.enabled = v; $0.audio = x } }))
+                                .toggleStyle(.switch).accessibilityLabel(L.t("ed.audio.keep")).socle(Socle.T.label).foregroundStyle(Socle.C.text).fixedSize()
+                            if audioKinds.contains("mic") { num(L.t("ed.audio.mic"), a.micGain) { v in edit { var x = $0.audio ?? .init(); x.micGain = min(2, max(0, v)); $0.audio = x } } }
+                            if audioKinds.contains("system") { num(L.t("ed.audio.system"), a.systemGain) { v in edit { var x = $0.audio ?? .init(); x.systemGain = min(2, max(0, v)); $0.audio = x } } }
+                            Spacer(minLength: 0)
+                        }
+                        Text(L.t("ed.audio.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Text(L.t("ed.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
@@ -355,6 +374,7 @@ struct EditorPanel: View {
     }
 
     private func load() {
+        audioKinds = ((try? package.readMeta())?.audio ?? []).map { $0.kind }
         do { spec = try Finisher.loadOrPlan(package, preset: .release) }
         catch { self.error = L.t("ed.fail", "\(error)") }
     }
@@ -382,6 +402,7 @@ private struct NumField: View {
     let label: String
     let set: (Double) -> Void
     @State private var text = ""
+    @State private var generation = 0                // recrée le champ après chaque validation : il relit la valeur réellement retenue (bornée)
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -394,13 +415,14 @@ private struct NumField: View {
             .onChange(of: value) { _, v in if !focused { text = format(v) } }
             .onSubmit(commit)
             .onChange(of: focused) { _, f in if !f { commit() } }
+            .id(generation)
     }
 
     private func format(_ v: Double) -> String { String(format: "%.2f", locale: L.locale, v) }
     private func commit() {
         let cleaned = text.replacingOccurrences(of: ",", with: ".")
-        if let v = Double(cleaned) { set(v) }
-        text = format(value)
+        if let v = Double(cleaned), format(v) != format(value) { set(v) }
+        generation += 1                              // Retour : le champ affiche la valeur retenue, sans la rétablir à l'ancienne au moment de perdre le focus
     }
 }
 

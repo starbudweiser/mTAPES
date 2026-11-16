@@ -6,6 +6,10 @@ import VideoToolbox
 /// Écrit le brut : HEVC matériel, qualité constante, image clé chaque seconde, fichier fragmenté (fragment de 2 s) :
 /// un plantage ou une coupure de courant laisse un fichier lisible.
 final class VideoWriter {
+    /// Étiquettes d'un film en Display P3 (primaires P3-D65, courbe et matrice comme le sRGB / Rec. 709).
+    static let p3Tags: [String: String] = [AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
+                                           AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
+                                           AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2]
     private let writer: AVAssetWriter
     private let input: AVAssetWriterInput
     private var sessionStarted = false
@@ -26,7 +30,7 @@ final class VideoWriter {
         }
     }
 
-    init(url: URL, width: Int, height: Int, profile: QualityProfile, fps: Int, tenBit: Bool, quality: Double? = nil, keyFrameInterval: Double? = nil) throws {
+    init(url: URL, width: Int, height: Int, profile: QualityProfile, fps: Int, tenBit: Bool, quality: Double? = nil, keyFrameInterval: Double? = nil, p3: Bool = false) throws {
         writer = try AVAssetWriter(url: url, fileType: .mov)
         writer.movieFragmentInterval = CMTime(seconds: 1, preferredTimescale: 600)
         writer.initialMovieFragmentInterval = CMTime(seconds: 1, preferredTimescale: 600)
@@ -39,7 +43,7 @@ final class VideoWriter {
             AVVideoExpectedSourceFrameRateKey: fps,
             AVVideoProfileLevelKey: level as String,
         ]
-        let settings: [String: Any] = [
+        var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: width,
             AVVideoHeightKey: height,
@@ -48,6 +52,7 @@ final class VideoWriter {
                 kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: true,
             ],
         ]
+        if p3 { settings[AVVideoColorPropertiesKey] = Self.p3Tags }
         input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
         input.expectsMediaDataInRealTime = true
         guard writer.canAdd(input) else { throw EngineError.writerFailed("réglages d'encodeur refusés") }

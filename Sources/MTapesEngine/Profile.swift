@@ -28,6 +28,14 @@ public enum QualityProfile: String, Codable, CaseIterable {
 }
 
 /// Format de pixel demandé à ScreenCaptureKit.
+/// Espace colorimétrique de la prise : sRGB (partout : web, README, GIF) ou Display P3 (couleurs plus vives sur écrans larges, Safari, QuickTime, Mac et iPhone).
+/// Les écrans HDR sont filmés en SDR (ScreenCaptureKit adapte la luminosité) : une vidéo HDR s'afficherait mal sur la plupart des sites.
+public enum ColorChoice: String, Codable, CaseIterable {
+    case srgb, p3
+    public var isP3: Bool { self == .p3 }
+    var cgName: CFString { self == .p3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB }
+}
+
 public enum PixelFormatChoice: String, Codable, CaseIterable {
     case yuv420 = "420v"      // 4:2:0 8 bits : évite la conversion couleur, HEVC Main
     case yuv420ten = "x420"   // 4:2:0 10 bits : HEVC Main10 (à valider selon le Mac)
@@ -59,6 +67,7 @@ public enum EngineError: Error, CustomStringConvertible {
     case noFrames
     case alreadyStopped
     case diskLow
+    case microphoneDenied
 
     public var description: String {
         switch self {
@@ -68,6 +77,7 @@ public enum EngineError: Error, CustomStringConvertible {
         case .writerFailed(let why): return "Écriture vidéo impossible : \(why)"
         case .noFrames: return "Aucune image reçue : l'écran n'a pas été capturé."
         case .alreadyStopped: return "La prise est déjà arrêtée."
+        case .microphoneDenied: return "Autorisation « Micro » absente pour ce programme (Réglages Système > Confidentialité et sécurité > Micro)."
         case .diskLow: return "Il reste moins de 2 Go sur le disque : libérez de l'espace avant d'enregistrer."
         }
     }

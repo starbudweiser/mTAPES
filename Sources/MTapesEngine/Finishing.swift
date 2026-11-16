@@ -57,6 +57,14 @@ public struct FinishingSpec: Codable, Equatable {
         public init(t0: Double, t1: Double, text: String) { self.t0 = t0; self.t1 = t1; self.text = text }
     }
 
+    /// Son : les pistes enregistrées sont reprises à vitesse normale seulement (les temps morts accélérés sont muets : pas de voix déformée).
+    public struct Audio: Codable, Equatable {
+        public var enabled: Bool
+        public var micGain: Double            // 0…2
+        public var systemGain: Double         // 0…2
+        public init(enabled: Bool = true, micGain: Double = 1, systemGain: Double = 0.7) { self.enabled = enabled; self.micGain = micGain; self.systemGain = systemGain }
+    }
+
     public var version = 1
     public var preset: String
     public var fps: Int
@@ -66,6 +74,8 @@ public struct FinishingSpec: Codable, Equatable {
     public var zooms: [Zoom]
     public var speeds: [Speed]
     public var captions: [Caption]
+    public var colors: String?                // srgb | p3 : espace du film (absent : celui de la prise)
+    public var audio: Audio?                  // absent : valeurs par défaut (son repris s'il existe)
 
     public init(preset: String, fps: Int, canvas: Canvas, cursor: Cursor = .init(), easeSeconds: Double = 0.45,
                 zooms: [Zoom] = [], speeds: [Speed] = [], captions: [Caption] = []) {
@@ -99,6 +109,36 @@ public enum FinishingPreset: String, CaseIterable {
         }
     }
     public var fps: Int { self == .readme ? 30 : 60 }
+}
+
+// MARK: - Géométrie de la zone filmée
+
+/// Où se trouvait la zone filmée pendant la prise : une fenêtre déplacée change l'origine (événements « bounds »),
+/// la taille reste celle du départ (la toile de la prise ne change pas). Sert à placer curseur, clics et zooms dans l'image.
+public struct GeometryTrack {
+    public let base: [Double]                    // x, y, largeur, hauteur du départ (points, repère écran)
+    let steps: [(t: Double, x: Double, y: Double)]
+
+    public init(meta: TapeMeta, events: [TapeEvent]) {
+        base = meta.source.bounds
+        steps = events.filter { $0.kind == "bounds" }.compactMap { e -> (t: Double, x: Double, y: Double)? in
+            guard let parts = e.label?.split(separator: ",").compactMap({ Double($0) }), parts.count >= 2 else { return nil }
+            return (e.t, parts[0], parts[1])
+        }.sorted { $0.t < $1.t }
+    }
+
+    public func origin(at t: Double) -> (x: Double, y: Double) {
+        var o = (x: base.count == 4 ? base[0] : 0, y: base.count == 4 ? base[1] : 0)
+        for s in steps { if s.t <= t { o = (s.x, s.y) } else { break } }
+        return o
+    }
+
+    /// Position d'un point de l'écran dans l'image de la prise, 0…1 (origine en haut à gauche).
+    public func normalize(x: Double, y: Double, at t: Double) -> (Double, Double) {
+        guard base.count == 4 else { return (x, y) }
+        let o = origin(at: t)
+        return ((x - o.x) / max(1, base[2]), (y - o.y) / max(1, base[3]))
+    }
 }
 
 // MARK: - Temps
@@ -177,6 +217,7 @@ public enum Planner {
 
         let duration = input.meta.durationSeconds
         let b = input.meta.source.bounds
+        let geometry = GeometryTrack(meta: input.meta, events: input.events)
         guard b.count == 4, b[2] > 0, b[3] > 0, duration > 0 else { return spec }
 
         // Actions positionnées, converties en coordonnées normalisées de la prise.
@@ -184,7 +225,7 @@ public enum Planner {
         var actions: [Action] = []
         for e in input.events where actionKinds.contains(e.kind) {
             guard let x = e.x, let y = e.y else { continue }
-            let nx = (x - b[0]) / b[2], ny = (y - b[1]) / b[3]
+            let (nx, ny) = geometry.normalize(x: x, y: y, at: e.t)
             guard (0...1).contains(nx), (0...1).contains(ny), e.t >= 0, e.t <= duration else { continue }
             actions.append(Action(t: e.t, nx: nx, ny: ny))
         }

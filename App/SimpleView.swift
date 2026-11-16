@@ -108,6 +108,21 @@ private struct IdleBody: View {
 
             if model.kind == .window { windowPicker }
 
+            VStack(alignment: .leading, spacing: Socle.M.space2) {
+                Text(L.t("main.audio")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+                HStack(spacing: Socle.M.space4) {
+                    Toggle(L.t("main.audio.system"), isOn: $model.recordSystemAudio).toggleStyle(.switch).accessibilityLabel(L.t("main.audio.system"))
+                    Toggle(L.t("main.audio.mic"), isOn: $model.recordMic).toggleStyle(.switch).accessibilityLabel(L.t("main.audio.mic"))
+                    Spacer(minLength: 0)
+                }
+                .socle(Socle.T.label).foregroundStyle(Socle.C.text)
+                if model.mode == .advanced {
+                    Toggle(L.t("main.color.p3"), isOn: $model.colorP3).toggleStyle(.switch).accessibilityLabel(L.t("main.color.p3"))
+                        .socle(Socle.T.label).foregroundStyle(Socle.C.text)
+                    Text(L.t("main.color.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
             VStack(spacing: Socle.M.space3) {
                 Button { model.start() } label: {
                     HStack(spacing: Socle.M.space2) {
@@ -236,6 +251,23 @@ private struct FinishingBody: View {
 private struct DoneBody: View {
     @ObservedObject var model: AppModel
     let summary: AppModel.TapeSummary
+    @State private var busy = false
+    @State private var status: String?
+    @State private var exported: URL?
+
+    private func export(_ d: Destination) {
+        busy = true; status = nil; exported = nil
+        let url = summary.url
+        Task {
+            do {
+                let r = try await Exporter.export(TapePackage(url: url), destination: d)
+                let file = URL(fileURLWithPath: r.path)
+                status = L.t("lib.exported", file.lastPathComponent, String(format: "%.1f", locale: L.locale, r.megabytes))
+                exported = file
+            } catch { status = L.t("lib.export.failed", "\(error)") }
+            busy = false
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Socle.M.space5) {
@@ -250,6 +282,18 @@ private struct DoneBody: View {
             if let why = model.systemStop { Note(text: L.t("done.stoppedby." + why)) }
             Note(text: L.t("done.note"))
             HStack(spacing: Socle.M.space2) {
+                ForEach(Destination.allCases, id: \.self) { d in
+                    Button(L.t("lib.export." + d.rawValue)) { export(d) }
+                        .buttonStyle(SocleButtonStyle(.primary, height: 30)).fixedSize().disabled(busy)
+                }
+            }
+            if busy { HStack(spacing: 8) { ProgressView().controlSize(.small); Text(L.t("lib.exporting")).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted) } }
+            else if let status { Text(status).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
+            HStack(spacing: Socle.M.space2) {
+                if let exported {
+                    Button(L.t("btn.reveal.film")) { NSWorkspace.shared.activateFileViewerSelecting([exported]) }
+                        .buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
+                }
                 Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([summary.url]) }
                     .buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
                 Button(L.t("btn.again")) { model.reset() }

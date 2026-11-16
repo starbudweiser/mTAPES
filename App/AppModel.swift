@@ -45,6 +45,16 @@ final class AppModel: ObservableObject {
         didSet { UserDefaults.standard.set(setupDone, forKey: "setupDone") }
     }
     @Published var lastSummary: TapeSummary?
+    /// Son : à enregistrer en pistes à part (son du Mac, micro) ; réglage conservé d'un lancement à l'autre.
+    @Published var recordSystemAudio: Bool = UserDefaults.standard.bool(forKey: "recordSystemAudio") {
+        didSet { UserDefaults.standard.set(recordSystemAudio, forKey: "recordSystemAudio") }
+    }
+    @Published var colorP3: Bool = UserDefaults.standard.bool(forKey: "colorP3") {
+        didSet { UserDefaults.standard.set(colorP3, forKey: "colorP3") }
+    }
+    @Published var recordMic: Bool = UserDefaults.standard.bool(forKey: "recordMic") {
+        didSet { UserDefaults.standard.set(recordMic, forKey: "recordMic") }
+    }
     /// Pilotage par IA (MCP) : désactivé par défaut ; tant qu'il est coché dans le menu, un socket privé accepte les commandes du même utilisateur.
     /// Accord par client MCP (nom annoncé à l'initialisation) : un client inconnu est mis en attente et ne peut rien faire avant votre accord.
     @Published var approvedClients: [String] = UserDefaults.standard.stringArray(forKey: "mcpApprovedClients") ?? []
@@ -129,7 +139,7 @@ final class AppModel: ObservableObject {
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await beginTake(target: target, origin: "manual", client: nil, name: nil, profile: .balanced, maxSeconds: nil)
+                try await beginTake(target: target, origin: "manual", client: nil, name: nil, profile: .balanced, maxSeconds: nil, system: recordSystemAudio, mic: recordMic, color: colorP3 ? .p3 : .srgb)
             } catch {
                 screenAllowed = Permissions.screenRecording
                 fail(error)
@@ -138,8 +148,9 @@ final class AppModel: ObservableObject {
     }
 
     /// Démarre la prise ; l'appelant a déjà posé la phase `.starting`. Sert au bouton, au raccourci et au pilotage par IA.
-    func beginTake(target: CaptureTarget, origin: String, client: String?, name: String?, profile: QualityProfile, maxSeconds: Int?) async throws {
+    func beginTake(target: CaptureTarget, origin: String, client: String?, name: String?, profile: QualityProfile, maxSeconds: Int?, system: Bool = false, mic: Bool = false, color: ColorChoice = .srgb) async throws {
         var options = CaptureOptions()
+        options.captureSystemAudio = system; options.captureMicrophone = mic; options.color = color
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH.mm.ss"
         let base = name?.trimmingCharacters(in: .whitespacesAndNewlines).prefix(60).description
         options.name = "\(base?.isEmpty == false ? base! : L.t("take.name")) \(f.string(from: Date()))"
@@ -147,7 +158,11 @@ final class AppModel: ObservableObject {
         options.client = client
         options.profile = profile
         let s = try await Recorder.start(target: target, options: options, outputDirectory: Self.outputDirectory)
-        s.onProblem = { [weak self] p in Task { @MainActor in self?.problem = Self.describe(p) } }
+        s.onProblem = { [weak self] p in
+            Task { @MainActor in
+                if p == .displayChanged { self?.stopForSystem("display") } else { self?.problem = Self.describe(p) }
+            }
+        }
         session = s
         if case .window(let id) = target { markWindowID = id } else { markWindowID = nil }
         startedAt = Date(); elapsed = 0
@@ -253,6 +268,7 @@ final class AppModel: ObservableObject {
             case .noFrames: return L.t("err.noFrames")
             case .writerFailed: return L.t("err.write")
             case .diskLow: return L.t("err.disk")
+            case .microphoneDenied: return L.t("err.mic")
             case .alreadyStopped: return L.t("err.generic")
             }
         }
@@ -264,6 +280,7 @@ final class AppModel: ObservableObject {
         case .streamStopped: return L.t("problem.stopped")
         case .noFrames: return L.t("problem.silent")
         case .writerFailed: return L.t("problem.write")
+        case .displayChanged: return L.t("done.stoppedby.display")
         }
     }
 

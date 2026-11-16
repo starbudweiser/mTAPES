@@ -17,6 +17,15 @@ public struct TapeMeta: Codable, Equatable {
         }
     }
 
+    /// Piste son enregistrée à part (`audio-system.mov`, `audio-mic.mov`) ; `start` = horloge hôte de la première trame sonore.
+    public struct AudioTrack: Codable, Equatable {
+        public var kind: String                // system | mic
+        public var file: String
+        public var start: Double
+        public var duration: Double
+        public init(kind: String, file: String, start: Double, duration: Double) { self.kind = kind; self.file = file; self.start = start; self.duration = duration }
+    }
+
     public struct Stats: Codable, Equatable {
         public var framesComplete = 0          // images livrées par ScreenCaptureKit (contenu changé)
         public var framesIdle = 0              // notifications « rien n'a changé » (aucune image écrite)
@@ -47,6 +56,8 @@ public struct TapeMeta: Codable, Equatable {
     public var stats: Stats
     public var state: String?                  // recording | complete | failed (absent : prise ancienne)
     public var error: String?                  // cause d'un échec ou d'une coupure du flux
+    public var colorSpace: String?             // srgb | p3 (absent : srgb)
+    public var audio: [AudioTrack]?            // pistes son (absent : prise sans son)
 
     public init(id: String, name: String, created: Date, origin: String, client: String?, source: Source,
                 profile: String, pixelFormat: String, codec: String, maxFPS: Int, width: Int, height: Int,

@@ -26,7 +26,7 @@ struct Args {
 
     init(_ raw: [String]) {
         var i = 0
-        let valued: Set<String> = ["preset", "dest", "target", "ratio", "input", "q", "kfi", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel"]
+        let valued: Set<String> = ["preset", "dest", "target", "ratio", "input", "q", "kfi", "display", "window", "app", "zone", "seconds", "out", "name", "profile", "fps", "pixel", "audio", "color"]
         while i < raw.count {
             let a = raw[i]
             if a.hasPrefix("--") {
@@ -62,6 +62,19 @@ struct Args {
             guard let choice = PixelFormatChoice(rawValue: px) else { fail("--pixel : 420v, x420 ou BGRA") }
             o.pixelFormat = choice
         }
+        if let c = options["color"] {
+            guard let choice = ColorChoice(rawValue: c) else { fail("--color : srgb ou p3") }
+            o.color = choice
+        }
+        if let a = options["audio"] {
+            switch a {
+            case "system": o.captureSystemAudio = true
+            case "mic": o.captureMicrophone = true
+            case "both": o.captureSystemAudio = true; o.captureMicrophone = true
+            case "none": break
+            default: fail("--audio : none, system, mic ou both")
+            }
+        }
         return o
     }
 
@@ -85,7 +98,7 @@ mtapes <commande>
   mcp [--dev]                    serveur MCP (stdio) : transmet les outils tapes_* à l'appli mTAPES (pilotage par IA activé dans son menu)
   info   CHEMIN.tape             affiche les métadonnées d'une prise
 cible : --display N | --window ID | --app BUNDLE | --zone x,y,l,h   (par défaut : écran principal)
-options moteur : --fps N --pixel 420v|x420|BGRA
+options moteur : --fps N --pixel 420v|x420|BGRA --audio none|system|mic|both --color srgb|p3
 """
 
 let args = Array(CommandLine.arguments.dropFirst())

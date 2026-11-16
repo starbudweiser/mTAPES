@@ -84,6 +84,45 @@ meta = json.load(open(os.path.join(path, "meta.json")))
 check(meta["origin"] == "mcp" and meta["client"] == "essai" and meta["state"] == "complete", "meta.json : origine mcp, client, état complet")
 dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", os.path.join(path, "raw.mov")], capture_output=True, text=True).stdout)
 check(abs(dur - stop["duration_s"]) < 0.3, f"raw.mov lisible, durée {dur:.2f} s")
+# Son : une prise avec le son du Mac (le micro demande une autorisation à l'utilisateur : non testé ici).
+err, bad = call("tapes_start", target="display", audio="radio")
+check(err, "tapes_start audio invalide : refusé")
+err, d2 = call("tapes_start", target="display", name="essai son", client="essai", audio="system", max_seconds=60)
+check(not err and "tape_path" in d2, "tapes_start audio=system")
+if not err:
+    sound = subprocess.Popen("sleep 1; afplay /System/Library/Sounds/Hero.aiff; afplay /System/Library/Sounds/Hero.aiff", shell=True)
+    time.sleep(4.5)
+    err, stop2 = call("tapes_stop")
+    sound.wait()
+    path2 = stop2["tape_path"]
+    meta2 = json.load(open(os.path.join(path2, "meta.json")))
+    tr = meta2.get("audio") or []
+    check(len(tr) == 1 and tr[0]["kind"] == "system" and os.path.exists(os.path.join(path2, tr[0]["file"])), "meta.json : piste son du Mac enregistrée")
+    if tr:
+        check(abs(tr[0]["start"] - meta2["firstFramePTS"]) < 0.5, f"son calé sur la vidéo (écart {1000 * (tr[0]['start'] - meta2['firstFramePTS']):.0f} ms)")
+        err, sm2 = call("tapes_summary", tape_path=path2)
+        check(not err and sm2.get("audio") == ["system"], "tapes_summary : indique le son")
+        err, exp2 = call("tapes_export", tape_path=path2, destination="short")
+        streams = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0", exp2["path"]], capture_output=True, text=True).stdout.split() if not err else []
+        check("audio" in streams and "video" in streams, "film exporté : piste son AAC présente")
+        vol = subprocess.run(["ffmpeg", "-v", "info", "-i", exp2["path"], "-af", "volumedetect", "-vn", "-f", "null", "-"], capture_output=True, text=True).stderr
+        mx = [float(l.split("max_volume:")[1].split()[0]) for l in vol.splitlines() if "max_volume" in l]
+        check(mx and mx[0] > -40, f"le son exporté n'est pas muet (crête {mx[0] if mx else '?'} dB)")
+# Couleurs : Display P3 (étiquettes du brut et du film ; GIF toujours sRGB).
+err, bad = call("tapes_start", target="display", color="rec2020")
+check(err, "tapes_start color invalide : refusé")
+err, d3 = call("tapes_start", target="display", name="essai P3", client="essai", color="p3", max_seconds=60)
+check(not err and "tape_path" in d3, "tapes_start color=p3")
+if not err:
+    time.sleep(2.5)
+    err, stop3 = call("tapes_stop")
+    path3 = stop3["tape_path"]
+    meta3 = json.load(open(os.path.join(path3, "meta.json")))
+    check(meta3.get("colorSpace") == "p3", "meta.json : colorSpace p3")
+    def prim(f): return subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v", "-show_entries", "stream=color_primaries", "-of", "csv=p=0", f], capture_output=True, text=True).stdout.strip()
+    check(prim(os.path.join(path3, "raw.mov")) == "smpte432", "brut étiqueté Display P3 (smpte432)")
+    err, exp3 = call("tapes_export", tape_path=path3, destination="release")
+    check(not err and prim(exp3["path"]) == "smpte432", "film exporté étiqueté Display P3")
 p.stdin.close(); p.wait(timeout=5)
 print("TAPE", path)
 print("RÉSULTAT :", "OK" if ok else "ÉCHEC")

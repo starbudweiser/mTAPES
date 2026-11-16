@@ -10,6 +10,7 @@ import Foundation
 /// Tout ce que le rendu de chaque image a besoin de savoir, préparé une fois.
 final class FinishingContext: @unchecked Sendable {
     let spec: FinishingSpec
+    let outputP3: Bool                       // film rendu et étiqueté en Display P3
     let source: CGSize                       // pixels de la prise
     let canvas: CGSize
     let timeline: FinishingSpec.Timeline
@@ -26,6 +27,7 @@ final class FinishingContext: @unchecked Sendable {
 
     init(spec: FinishingSpec, meta: TapeMeta, sourceSize: CGSize, sourceDuration: Double, events: [TapeEvent], pointerSamples: [(t: Double, x: Double, y: Double)]) {
         self.spec = spec
+        self.outputP3 = (spec.colors ?? meta.colorSpace ?? "srgb") == "p3"
         self.source = sourceSize
         self.canvas = CGSize(width: spec.canvas.width, height: spec.canvas.height)
         self.timeline = spec.timeline(sourceDuration: sourceDuration)
@@ -43,11 +45,13 @@ final class FinishingContext: @unchecked Sendable {
 
         // Positions normalisées dans l'image de la prise (origine en haut à gauche).
         let b = meta.source.bounds.count == 4 ? meta.source.bounds : [0, 0, Double(sourceSize.width), Double(sourceSize.height)]
-        func norm(_ x: Double, _ y: Double) -> (Double, Double) { ((x - b[0]) / max(1, b[2]), (y - b[1]) / max(1, b[3])) }
+        _ = b
+        let geometry = GeometryTrack(meta: meta, events: events)
+        func norm(_ x: Double, _ y: Double, _ t: Double) -> (Double, Double) { geometry.normalize(x: x, y: y, at: t) }
         var smoothed: [(t: Double, nx: Double, ny: Double)] = []
         var lx = 0.0, ly = 0.0, lt = 0.0
         for (i, s) in pointerSamples.enumerated() {
-            let (nx, ny) = norm(s.x, s.y)
+            let (nx, ny) = norm(s.x, s.y, s.t)
             if i == 0 || spec.cursor.smoothing <= 0 { lx = nx; ly = ny } else {
                 let a = 1 - exp(-max(0, s.t - lt) / spec.cursor.smoothing)        // lissage tenant compte du temps écoulé
                 lx += (nx - lx) * a; ly += (ny - ly) * a
@@ -58,7 +62,7 @@ final class FinishingContext: @unchecked Sendable {
         pointer = smoothed
         clicks = events.compactMap { e in
             guard ["click", "doubleclick", "rightclick"].contains(e.kind), let x = e.x, let y = e.y else { return nil }
-            let (nx, ny) = norm(x, y)
+            let (nx, ny) = norm(x, y, e.t)
             return (e.t, nx, ny)
         }
 
@@ -270,7 +274,7 @@ final class FinishingCompositor: NSObject, AVVideoCompositing {
                 let image = instruction.context.render(sourceBuffer: source, outputTime: CMTimeGetSeconds(request.compositionTime))
                 let t1 = CFAbsoluteTimeGetCurrent()
                 Self.ciContext.render(image, to: output, bounds: CGRect(origin: .zero, size: instruction.context.canvas),
-                                      colorSpace: CGColorSpace(name: CGColorSpace.sRGB))
+                                      colorSpace: CGColorSpace(name: instruction.context.outputP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB))
                 if ProcessInfo.processInfo.environment["MTAPES_PROFILE"] != nil { Profile.add(graph: t1 - t0, render: CFAbsoluteTimeGetCurrent() - t1) }
                 request.finish(withComposedVideoFrame: output)
             }
@@ -306,6 +310,8 @@ public enum Finisher {
         let built = try await build(package, spec: spec)
         let item = AVPlayerItem(asset: built.composition)
         item.videoComposition = built.videoComposition
+        item.audioMix = built.audioMix
+        item.audioTimePitchAlgorithm = .spectral
         return item
     }
 
@@ -313,9 +319,52 @@ public enum Finisher {
         var composition: AVMutableComposition
         var videoComposition: AVMutableVideoComposition
         var duration: Double
+        var audioMix: AVAudioMix?
+        var hasAudio: Bool
     }
 
-    static func build(_ package: TapePackage, spec: FinishingSpec) async throws -> Built {
+    /// Insère les pistes son aux seuls passages à vitesse normale (aux temps du film), avec des fondus de 30 ms aux coupes.
+    static func addAudio(_ tracks: [TapeMeta.AudioTrack], package: TapePackage, meta: TapeMeta, spec: FinishingSpec,
+                         composition: AVMutableComposition, sourceDuration: Double) async throws -> AVAudioMix? {
+        let timeline = spec.timeline(sourceDuration: sourceDuration)
+        let hasMic = tracks.contains { $0.kind == "mic" }
+        let cfg = spec.audio ?? FinishingSpec.Audio()
+        guard cfg.enabled else { return nil }
+        func cm(_ s: Double) -> CMTime { CMTime(seconds: s, preferredTimescale: 48000) }
+        var params: [AVMutableAudioMixInputParameters] = []
+        for t in tracks {
+            let url = package.url.appendingPathComponent(t.file)
+            guard FileManager.default.fileExists(atPath: url.path) else { continue }
+            let asset = AVURLAsset(url: url)
+            guard let src = try await asset.loadTracks(withMediaType: .audio).first,
+                  let dst = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else { continue }
+            let audioDuration = CMTimeGetSeconds(try await asset.load(.duration))
+            let offset = t.start - meta.firstFramePTS                       // début du son, en secondes de la prise
+            let gain = Float(min(2, max(0, t.kind == "mic" ? cfg.micGain : (hasMic ? cfg.systemGain : min(1, cfg.systemGain / 0.7)))))
+            let p = AVMutableAudioMixInputParameters(track: dst)
+            var inserted = false
+            for piece in timeline.pieces where abs(piece.factor - 1) < 1e-6 {
+                var a0 = piece.s0 - offset, a1 = piece.s1 - offset
+                let shift = max(0, -a0)
+                a0 += shift; a1 = min(a1, audioDuration)
+                guard a1 - a0 > 0.06 else { continue }
+                let at = piece.c0 + shift
+                try dst.insertTimeRange(CMTimeRange(start: cm(a0), duration: cm(a1 - a0)), of: src, at: cm(at))
+                let fade = 0.03
+                p.setVolumeRamp(fromStartVolume: 0, toEndVolume: gain, timeRange: CMTimeRange(start: cm(at), duration: cm(fade)))
+                p.setVolume(gain, at: cm(at + fade))
+                p.setVolumeRamp(fromStartVolume: gain, toEndVolume: 0, timeRange: CMTimeRange(start: cm(at + (a1 - a0) - fade), duration: cm(fade)))
+                inserted = true
+            }
+            if inserted { params.append(p) } else { composition.removeTrack(dst) }
+        }
+        guard !params.isEmpty else { return nil }
+        let mix = AVMutableAudioMix()
+        mix.inputParameters = params
+        return mix
+    }
+
+    static func build(_ package: TapePackage, spec: FinishingSpec, withAudio: Bool = true) async throws -> Built {
         let meta = try package.readMeta()
         let events = (try? EventLog.decode(Data(contentsOf: package.eventsURL))) ?? []
         let pointer = PointerTrack.decode((try? Data(contentsOf: package.pointerURL)) ?? Data()) ?? []
@@ -335,13 +384,25 @@ public enum Finisher {
                                        toDuration: CMTime(seconds: (t1 - t0) / sp.factor, preferredTimescale: 600))
         }
 
+        let videoDuration = composition.duration
+        var audioMix: AVAudioMix?
+        if withAudio, let tracks = meta.audio, !tracks.isEmpty {
+            audioMix = try await addAudio(tracks, package: package, meta: meta, spec: spec, composition: composition, sourceDuration: seconds)
+        }
+        let hasAudio = !composition.tracks(withMediaType: .audio).isEmpty
+
         let context = FinishingContext(spec: spec, meta: meta, sourceSize: size, sourceDuration: seconds, events: events, pointerSamples: pointer)
         let video = AVMutableVideoComposition()
         video.frameDuration = CMTime(value: 1, timescale: CMTimeScale(spec.fps))
         video.renderSize = CGSize(width: spec.canvas.width, height: spec.canvas.height)
         video.customVideoCompositorClass = FinishingCompositor.self
-        video.instructions = [FinishingInstruction(timeRange: CMTimeRange(start: .zero, duration: composition.duration), trackID: compTrack.trackID, context: context)]
-        return Built(composition: composition, videoComposition: video, duration: CMTimeGetSeconds(composition.duration))
+        if context.outputP3 {                       // espace de travail du compositeur : Display P3 (sinon AVFoundation ramène les images en Rec. 709)
+            video.colorPrimaries = AVVideoColorPrimaries_P3_D65
+            video.colorTransferFunction = AVVideoTransferFunction_ITU_R_709_2
+            video.colorYCbCrMatrix = AVVideoYCbCrMatrix_ITU_R_709_2
+        }
+        video.instructions = [FinishingInstruction(timeRange: CMTimeRange(start: .zero, duration: videoDuration), trackID: compTrack.trackID, context: context)]
+        return Built(composition: composition, videoComposition: video, duration: CMTimeGetSeconds(videoDuration), audioMix: audioMix, hasAudio: hasAudio)
     }
 }
 
