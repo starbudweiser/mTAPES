@@ -23,6 +23,10 @@ and the Screen Recording permission. Design mockups: [`maquettes/index.html`](ma
 - **MCP server** so Claude Code, Codex, Cursor or any other AI can start a recording, announce its clicks, and get a finished demo (GIF for a README, MP4 for a release, vertical video for social networks).
 - Light files: adaptive frame rate, hardware HEVC, optimized GIF.
 
+## AI auto-edit
+
+The connected AI edits the take itself (`tapes_summary` → `tapes_apply_plan` → `tapes_export`), validated and bounded by mTAPES, at no extra cost. See [PROMPTING.md](PROMPTING.md).
+
 ## MCP: let an AI record and finish the demo
 
 The app embeds an MCP server so Claude Code, Codex, Cursor or any MCP client can start a take, **announce each action it performs**, stop, then get a finished demo.

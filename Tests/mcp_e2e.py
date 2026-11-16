@@ -33,7 +33,7 @@ init = rpc("initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "
 check(init["result"]["serverInfo"]["name"] == "mtapes" and "instructions" in init["result"], "initialize : nom du serveur et instructions")
 rpc("notifications/initialized", notify=True)
 tools = [t["name"] for t in rpc("tools/list")["result"]["tools"]]
-check(sorted(tools) == sorted(["tapes_list_targets", "tapes_start", "tapes_mark", "tapes_status", "tapes_stop", "tapes_list", "tapes_finish", "tapes_export"]), f"tools/list : {len(tools)} outils")
+check(sorted(tools) == sorted(["tapes_list_targets", "tapes_start", "tapes_mark", "tapes_status", "tapes_stop", "tapes_list", "tapes_finish", "tapes_export", "tapes_summary", "tapes_apply_plan"]), f"tools/list : {len(tools)} outils")
 check(rpc("ping")["result"] == {}, "ping")
 check("error" in rpc("inconnu"), "méthode inconnue : erreur JSON-RPC")
 
@@ -63,6 +63,12 @@ check(not err and lst and lst[0]["origin"] == "mcp" and lst[0]["state"] == "comp
 path = stop["tape_path"]
 err, fin = call("tapes_finish", tape_path=path, preset="release")
 check(not err and fin["canvas"] == "1920x1080" and len(fin["captions"]) == 3 and len(fin["zooms"]) >= 1, f"tapes_finish : {len(fin['zooms'])} zoom(s), {len(fin['captions'])} légendes" if not err else str(fin))
+err, sm = call("tapes_summary", tape_path=path, frames=2)
+check(not err and sm["duration_s"] > 2.5 and len(sm["events"]) >= 3 and len(sm["frames"]) == 2 and all(0 <= e.get("x", 0) <= 1 or e.get("outside") for e in sm["events"]), f"tapes_summary : {len(sm['events'])} événements, {len(sm.get('frames', []))} images" if not err else str(sm))
+err, ap = call("tapes_apply_plan", tape_path=path, preset="release", zooms=[{"from_s": 0.5, "to_s": 2.0, "scale": 2, "x": 0.5, "y": 0.5}], speeds=[], captions=[{"from_s": 0.5, "to_s": 2.0, "text": "Essai IA"}])
+check(not err and len(ap["zooms"]) == 1 and ap["captions"][0]["text"] == "Essai IA" and ap["zooms"][0]["by"] == "ai", "tapes_apply_plan : plan de l'IA appliqué" if not err else str(ap))
+pr = rpc("prompts/get", {"name": "edit_demo", "arguments": {"tape_path": path}})["result"]
+check("tapes_apply_plan" in pr["messages"][0]["content"]["text"], "prompts/get edit_demo : guide de montage")
 err, bad = call("tapes_finish", tape_path="/etc/passwd")
 check(err, "tapes_finish refuse un chemin hors de ~/Movies/mTAPES")
 err, exp = call("tapes_export", tape_path=path, destination="release")

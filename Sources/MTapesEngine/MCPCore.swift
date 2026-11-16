@@ -14,7 +14,7 @@ public struct MCPCore: Sendable {
     do the work, calling tapes_mark right after EACH action you perform (click, type, scroll, key) with its screen position and a short human label, \
     and tapes_mark kind=chapter at the start of each phase -> tapes_stop. Marks become the editing script: zooms and captions follow them, so label them well \
     (e.g. "Choose a folder", not "click"). Coordinates are in points; use space=window for positions relative to the filmed window's top-left corner. \
-    After tapes_stop: tapes_finish (plans zooms on your marked actions, speeds up dead time, captions from your labels; optional) -> tapes_export with destination readme (light GIF for a README), release (1080p MP4) or short (vertical 9:16 MP4). \
+    After tapes_stop, for the best result edit it yourself: tapes_summary -> tapes_apply_plan (see prompt edit_demo). Or quickly: tapes_finish (plans zooms on your marked actions, speeds up dead time, captions from your labels; optional) -> tapes_export with destination readme (light GIF for a README), release (1080p MP4) or short (vertical 9:16 MP4). \
     Never leave a take running: always call tapes_stop (a take also stops by itself after max_seconds, default 600). One take at a time.
     """
 
@@ -60,6 +60,23 @@ public struct MCPCore: Sendable {
                 "preset": ["type": "string", "enum": ["readme", "release", "short"], "description": "Target look (default release)."],
                 "ratio": ["type": "string", "enum": ["16:9", "9:16"], "description": "Force the aspect ratio."],
              ], required: ["tape_path"])],
+            ["name": "tapes_summary",
+             "description": "Read a finished take to edit it: duration, every mark (time, kind, position 0-1, label), and the current plan. Optional frames (1-6) returns that many small screenshots spread over the take, or at the times listed in frame_times, so you can see the screen. Use it before tapes_apply_plan.",
+             "inputSchema": schema([
+                "tape_path": ["type": "string"],
+                "frames": ["type": "integer", "description": "Number of screenshots to return (0-6, default 0)."],
+                "frame_times": ["type": "array", "items": ["type": "number"], "description": "Instants (seconds of the raw take) to screenshot, up to 6."],
+             ], required: ["tape_path"])],
+            ["name": "tapes_apply_plan",
+             "description": "Apply YOUR editing decisions to a take (AI auto-edit). Times are seconds of the RAW take; positions x, y are 0-1 across the image. Sections you omit keep the current plan (or the automatic one). Everything is validated and clamped; read the returned warnings. Call tapes_export afterwards. Guide: prompt edit_demo.",
+             "inputSchema": schema([
+                "tape_path": ["type": "string"],
+                "preset": ["type": "string", "enum": ["readme", "release", "short"], "description": "Target look; changing it recomputes the base plan."],
+                "zooms": ["type": "array", "description": "Zoom plateaus.", "items": ["type": "object", "properties": ["from_s": ["type": "number"], "to_s": ["type": "number"], "scale": ["type": "number", "description": "1.1-3, usually 1.6-2.2"], "x": ["type": "number"], "y": ["type": "number"]], "required": ["from_s", "to_s", "x", "y"]]],
+                "speeds": ["type": "array", "description": "Ranges played faster (dead time).", "items": ["type": "object", "properties": ["from_s": ["type": "number"], "to_s": ["type": "number"], "factor": ["type": "number", "description": "0.25-16, usually 3-8"]], "required": ["from_s", "to_s", "factor"]]],
+                "captions": ["type": "array", "description": "Short text pills.", "items": ["type": "object", "properties": ["from_s": ["type": "number"], "to_s": ["type": "number"], "text": ["type": "string"]], "required": ["from_s", "to_s", "text"]]],
+                "cursor": ["type": "object", "properties": ["show": ["type": "boolean"], "ripple": ["type": "boolean"], "size_percent": ["type": "number"]]],
+             ], required: ["tape_path"])],
             ["name": "tapes_export",
              "description": "Render the finished demo. destination: readme = light GIF (about 960 px, under 9.5 MB) for a README; release = 1920x1080 MP4 for a GitHub release; short = vertical 1080x1920 MP4 for social networks. Takes about the length of the video to render; returns the file path, size and duration.",
              "inputSchema": schema([
@@ -91,10 +108,19 @@ public struct MCPCore: Sendable {
             let params = message["params"] as? [String: Any]
             let version = params?["protocolVersion"] as? String ?? "2025-03-26"
             if let info = params?["clientInfo"] as? [String: Any], let n = info["name"] as? String, !n.isEmpty { clientName = n }
-            return reply(["protocolVersion": version, "capabilities": ["tools": [String: Any]()],
+            return reply(["protocolVersion": version, "capabilities": ["tools": [String: Any](), "prompts": [String: Any]()],
                           "serverInfo": ["name": "mtapes", "version": "0.2.0"], "instructions": Self.instructions])
         case "ping":
             return reply([:])
+        case "prompts/list":
+            return reply(["prompts": [["name": "edit_demo", "description": "Step-by-step guide to edit a recorded demo (zooms, dead time, captions) with tapes_summary and tapes_apply_plan.",
+                                      "arguments": [["name": "tape_path", "description": "Path of the take to edit.", "required": false]]]]])
+        case "prompts/get":
+            let params = message["params"] as? [String: Any] ?? [:]
+            guard params["name"] as? String == "edit_demo" else { return fail(-32602, "Unknown prompt") }
+            let path = (params["arguments"] as? [String: Any])?["tape_path"] as? String
+            let text = Montage.guide + (path.map { "\nTake to edit: \($0)" } ?? "")
+            return reply(["description": "Edit a demo with mTAPES", "messages": [["role": "user", "content": ["type": "text", "text": text]]]])
         case "tools/list":
             return reply(["tools": tools()])
         case "tools/call":
@@ -103,8 +129,11 @@ public struct MCPCore: Sendable {
             var arguments = params["arguments"] as? [String: Any] ?? [:]
             arguments["mcp_client"] = clientName
             let (text, isError): (String, Bool)
-            if name == "tapes_finish" || name == "tapes_export" {
-                (text, isError) = await callLocal(name: name, arguments: arguments, clientName: clientName)
+            if ["tapes_finish", "tapes_export", "tapes_summary", "tapes_apply_plan"].contains(name) {
+                let (t, e, images) = await callLocal(name: name, arguments: arguments, clientName: clientName)
+                var content: [[String: Any]] = [["type": "text", "text": t]]
+                content.append(contentsOf: images)
+                return reply(["content": content, "isError": e])
             } else if let controlMethod = Self.methodForTool[name] {
                 (text, isError) = await callApp(method: controlMethod, arguments: arguments)
             } else {
@@ -128,14 +157,14 @@ public struct MCPCore: Sendable {
 
     // MARK: Finition et export (dans ce processus)
 
-    private func callLocal(name: String, arguments: [String: Any], clientName: String) async -> (String, Bool) {
+    private func callLocal(name: String, arguments: [String: Any], clientName: String) async -> (String, Bool, [[String: Any]]) {
         let (authText, authError) = await callApp(method: "authorize", arguments: ["mcp_client": clientName])
-        if authError { return (authText, true) }
-        guard let path = arguments["tape_path"] as? String else { return ("tape_path is required.", true) }
+        if authError { return (authText, true, []) }
+        guard let path = arguments["tape_path"] as? String else { return ("tape_path is required.", true, []) }
         let url = URL(fileURLWithPath: path).standardizedFileURL
         let base = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Movies/mTAPES").standardizedFileURL.path
         guard url.pathExtension == "tape", url.path.hasPrefix(base + "/"), FileManager.default.fileExists(atPath: url.appendingPathComponent("meta.json").path) else {
-            return ("tape_path must be a .tape folder inside ~/Movies/mTAPES (use the path returned by tapes_stop or tapes_list).", true)
+            return ("tape_path must be a .tape folder inside ~/Movies/mTAPES (use the path returned by tapes_stop or tapes_list).", true, [])
         }
         let package = TapePackage(url: url)
         func json(_ object: [String: Any]) -> String {
@@ -150,15 +179,34 @@ public struct MCPCore: Sendable {
                 return (json(["finition_path": package.finishingURL.path, "preset": spec.preset, "canvas": "\(spec.canvas.width)x\(spec.canvas.height)",
                               "zooms": spec.zooms.map { ["from_s": r($0.t0), "to_s": r($0.t1), "scale": r($0.scale)] },
                               "sped_up": spec.speeds.map { ["from_s": r($0.t0), "to_s": r($0.t1), "factor": $0.factor] },
-                              "captions": spec.captions.map { $0.text }]), false)
+                              "captions": spec.captions.map { $0.text }]), false, [])
             }
-            guard let dest = Destination(rawValue: arguments["destination"] as? String ?? "") else { return ("destination must be readme, release or short.", true) }
+            if name == "tapes_summary" {
+                var out = try Montage.summary(package)
+                var images: [[String: Any]] = []
+                let times = (arguments["frame_times"] as? [NSNumber])?.map(\.doubleValue)
+                let count = (arguments["frames"] as? NSNumber)?.intValue ?? 0
+                if count > 0 || times?.isEmpty == false {
+                    let shots = try await Montage.frames(package, count: count, times: times)
+                    out["frames"] = shots.map { ["t": Montage.r2($0.t)] }
+                    images = shots.map { ["type": "image", "data": $0.jpeg.base64EncodedString(), "mimeType": "image/jpeg"] }
+                }
+                return (json(out), false, images)
+            }
+            if name == "tapes_apply_plan" {
+                let preset = FinishingPreset(rawValue: arguments["preset"] as? String ?? "release") ?? .release
+                let (spec, warnings) = try Montage.apply(package, preset: preset, ratio: arguments["ratio"] as? String, arguments: arguments)
+                var out = Montage.describe(spec, duration: try package.readMeta().durationSeconds)
+                out["warnings"] = warnings
+                return (json(out), false, [])
+            }
+            guard let dest = Destination(rawValue: arguments["destination"] as? String ?? "") else { return ("destination must be readme, release or short.", true, []) }
             let target = (arguments["target_megabytes"] as? NSNumber)?.doubleValue
             let result = try await Exporter.export(package, destination: dest, targetMegabytes: target)
             return (json(["path": result.path, "format": result.format, "size": "\(result.width)x\(result.height)", "duration_s": result.durationSeconds,
-                          "megabytes": result.megabytes, "render_s": result.renderSeconds, "queued_s": result.queuedSeconds]), false)
+                          "megabytes": result.megabytes, "render_s": result.renderSeconds, "queued_s": result.queuedSeconds]), false, [])
         } catch {
-            return ("\(name) failed: \(error)", true)
+            return ("\(name) failed: \(error)", true, [])
         }
     }
 }

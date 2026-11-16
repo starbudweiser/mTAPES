@@ -122,6 +122,35 @@ final class FinishingTests: XCTestCase {
                  maxFPS: 60, width: 2000, height: 1000, durationSeconds: duration, firstFramePTS: 0, stats: .init())
     }
 
+    func testMontageValidatesAndClampsAIDecisions() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("mtapes-montage-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let pkg = try TapePackage.create(in: dir, name: "m")
+        try pkg.writeMeta(meta(duration: 10))
+        try EventLog.encode([TapeEvent(t: 1, kind: "click", x: 500, y: 250, source: "declared", label: "Ouvrir")]).write(to: pkg.eventsURL)
+        let summary = try Montage.summary(pkg)
+        XCTAssertEqual((summary["events"] as? [[String: Any]])?.first?["x"] as? Double, 0.5)
+        let args: [String: Any] = [
+            "zooms": [["from_s": 1, "to_s": 3, "scale": 9, "x": 2, "y": -1], ["from_s": 4, "to_s": 4.1, "x": 0.5, "y": 0.5]],
+            "speeds": [["from_s": 5, "to_s": 9, "factor": 4], ["from_s": 8, "to_s": 20, "factor": 100]],
+            "captions": [["from_s": 1, "to_s": 3, "text": "  Ouvrir  "], ["from_s": 2, "to_s": 3, "text": ""]],
+        ]
+        let (spec, warnings) = try Montage.apply(pkg, preset: .release, ratio: nil, arguments: args)
+        XCTAssertEqual(spec.zooms.count, 1)                                   // le zoom de 0,1 s est écarté
+        XCTAssertEqual(spec.zooms[0].scale, 3)                                // borné
+        XCTAssertEqual(spec.zooms[0].fx, 1); XCTAssertEqual(spec.zooms[0].fy, 0)
+        XCTAssertEqual(spec.zooms[0].source, "ai")
+        XCTAssertEqual(spec.speeds.count, 2)
+        XCTAssertEqual(spec.speeds[1].t0, 9, accuracy: 1e-9)                  // chevauchement : le second commence où le premier finit
+        XCTAssertEqual(spec.speeds[1].t1, 10, accuracy: 1e-9)                 // et reste dans la prise
+        XCTAssertEqual(spec.speeds[1].factor, 16)
+        XCTAssertEqual(spec.captions.map(\.text), ["Ouvrir"])
+        XCTAssertGreaterThanOrEqual(warnings.count, 5)
+        // Les sections absentes gardent le plan enregistré.
+        let (again, _) = try Montage.apply(pkg, preset: .release, ratio: nil, arguments: ["captions": [] as [[String: Any]]])
+        XCTAssertEqual(again.zooms.count, 1); XCTAssertTrue(again.captions.isEmpty)
+    }
+
     func testTimelineMapsSourceAndOutputTime() {
         let t = FinishingSpec.Timeline(speeds: [.init(t0: 2, t1: 10, factor: 4)], sourceDuration: 12)
         XCTAssertEqual(t.outputDuration, 2 + 2 + 2, accuracy: 1e-9)           // 2 s normales, 8 s ÷ 4, 2 s normales
@@ -234,7 +263,7 @@ final class ConnectorTests: XCTestCase {
         let list = try await post(#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#, token: "secret-token-secret-token-secret-token")
         XCTAssertEqual(list.0, 200)
         let tools = ((try JSONSerialization.jsonObject(with: list.1) as! [String: Any])["result"] as! [String: Any])["tools"] as! [Any]
-        XCTAssertEqual(tools.count, 8)
+        XCTAssertEqual(tools.count, 10)
         let noToken = try await post(#"{"jsonrpc":"2.0","id":3,"method":"ping"}"#, token: nil)
         XCTAssertEqual(noToken.0, 401)
         let badToken = try await post(#"{"jsonrpc":"2.0","id":3,"method":"ping"}"#, token: "mauvais")
