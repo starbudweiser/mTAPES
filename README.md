@@ -8,6 +8,8 @@ A native macOS screen recorder that edits your demos for you, and that any AI ca
 
 mTAPES is made by Starbudweiser & Claude Code (Anthropic). Part of the **DESKTOP MAC TOOLKIT**. MIT License, © 2026 Starbudweiser. Provided as is, without warranty. "About mTAPES" is in the app menu.
 
+![The mTAPES library with a take selected, showing its details, export buttons and the editing panel with automatic zooms.](docs/screenshot.png)
+
 ## Status
 
 **Version 1.0.** A menu-bar app for macOS 15+ on Apple Silicon (Screen Recording permission), signed and notarized, with automatic updates. Install: download `mTAPES-<version>-macOS-arm64.zip` from the [Releases page](https://github.com/starbudweiser/mTAPES/releases/latest), unzip, and move mTAPES.app to Applications.
