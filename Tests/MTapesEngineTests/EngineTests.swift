@@ -85,3 +85,32 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(back.error, "Flux interrompu")
     }
 }
+
+final class ControlTests: XCTestCase {
+    func testJSONValueRoundTrip() throws {
+        let value: JSONValue = .object(["a": .number(1), "b": .array([.string("x"), .bool(true), .null]), "c": .object(["d": .number(2.5)])])
+        let data = try JSONEncoder().encode(value)
+        XCTAssertEqual(try JSONDecoder().decode(JSONValue.self, from: data), value)
+        XCTAssertEqual(value["c"]?["d"]?.double, 2.5)
+        XCTAssertEqual(value["a"]?.int, 1)
+    }
+
+    func testServerAndClientLoopback() throws {
+        let path = "/tmp/mtapes-test-\(getpid()).sock"
+        let server = ControlServer(path: path) { request in
+            if request.method == "echo" { return .init(id: request.id, ok: true, result: request.params) }
+            return .failure(request.id, "inconnu")
+        }
+        try server.start()
+        defer { server.stop() }
+        XCTAssertTrue(ControlClient.isReachable(path: path))
+        let attrs = try FileManager.default.attributesOfItem(atPath: path)
+        XCTAssertEqual((attrs[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+        let ok = try ControlClient.call(path: path, method: "echo", params: .object(["k": .string("v")]), id: 7, timeout: 5)
+        XCTAssertTrue(ok.ok); XCTAssertEqual(ok.id, 7); XCTAssertEqual(ok.result?["k"]?.string, "v")
+        let ko = try ControlClient.call(path: path, method: "nope", timeout: 5)
+        XCTAssertFalse(ko.ok); XCTAssertEqual(ko.error, "inconnu")
+        server.stop()
+        XCTAssertFalse(ControlClient.isReachable(path: path))
+    }
+}

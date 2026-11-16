@@ -10,6 +10,9 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 swiftc -O -swift-version 5 -parse-as-library -target arm64-apple-macos15 -o "$APP/Contents/MacOS/mTAPES" Sources/MTapesEngine/*.swift App/*.swift
 
+# Programme en ligne de commande et serveur MCP, dans le paquet (nom différent de l'appli : le disque ignore la casse).
+swiftc -O -swift-version 5 -target arm64-apple-macos15 -o "$APP/Contents/MacOS/mtapes-cli" Sources/MTapesEngine/*.swift Sources/mtapes/*.swift
+
 [ -f assets/AppIcon.icns ] && cp assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 if [ -n "${DEV:-}" ]; then

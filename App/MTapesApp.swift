@@ -26,6 +26,8 @@ struct MTapesApp: App {
             }
             Button(L.t("menu.open")) { openWindow(id: "main"); NSApp.activate() }
             Divider()
+            Toggle(L.t("menu.mcp"), isOn: $model.mcpEnabled)
+            Divider()
             Button(L.t("menu.about")) { About.show() }
             Button(L.t("menu.quit")) { NSApp.terminate(nil) }.keyboardShortcut("q")
         } label: {
@@ -41,6 +43,8 @@ struct MenuBarLabel: View {
             Image(nsImage: Cassette.menuBarImage())
             if model.phase == .recording {
                 Text(AppModel.clock(model.elapsed)).monospacedDigit().foregroundStyle(.red)
+            } else if model.mcpEnabled && !model.unseen {
+                Text("IA").font(.system(size: 9, weight: .bold))   // le pilotage par IA est ouvert : jamais silencieux
             } else if model.unseen {
                 // Résultat ou erreur arrivé sans fenêtre ouverte (prise lancée au raccourci) : pastille, sans rien ouvrir.
                 if case .failed = model.phase { Text("!").bold().foregroundStyle(.orange) } else { Text("✓").bold().foregroundStyle(.green) }
@@ -92,6 +96,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return .terminateLater
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        RemoteControl.shared.apply(enabled: false)   // supprime le socket : pas de fichier orphelin
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         let args = CommandLine.arguments
         if let i = args.firstIndex(of: "--lang"), i + 1 < args.count { L.override = args[i + 1] }
@@ -105,6 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             render(to: args[i + 1], args: args)
             return
         }
+        RemoteControl.shared.apply(enabled: AppModel.shared.mcpEnabled)
         // ⌥⌘R : touche R (code 15), modificateurs Commande (256) + Option (2048).
         HotKey.register(keyCode: 15, modifiers: 256 | 2048) {
             Task { @MainActor in AppModel.shared.toggle() }

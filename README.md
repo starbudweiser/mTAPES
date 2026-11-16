@@ -23,6 +23,19 @@ and the Screen Recording permission. Design mockups: [`maquettes/index.html`](ma
 - **MCP server** so Claude Code, Codex, Cursor or any other AI can start a recording, announce its clicks, and get a finished demo (GIF for a README, MP4 for a release, vertical video for social networks).
 - Light files: adaptive frame rate, hardware HEVC, optimized GIF.
 
+## MCP: let an AI record the demo
+
+The app embeds an MCP server (stdio) so Claude Code, Codex, Cursor or any MCP client can start a take, **announce each action it performs**, and stop. The marks become the editing script later (zooms and captions follow them).
+It is **off by default**: tick **AI control** in the mTAPES menu-bar menu (the menu-bar icon then shows "IA"). Nothing else can start a recording through the app without that consent.
+
+```sh
+claude mcp add mtapes -- "/Applications/mTAPES.app/Contents/MacOS/mtapes-cli" mcp
+```
+
+Tools: `tapes_list_targets`, `tapes_start` (screen, one window even if covered, one app, or a zone), `tapes_mark` (click, type, scroll, key, chapter, with position and a human label), `tapes_status`, `tapes_stop`, `tapes_list`.
+The server never films anything itself: it forwards to the app (which holds the Screen Recording permission) over a private Unix socket (mode 600, same user only), and launches the app in the background if needed. A take also stops by itself after `max_seconds` (default 600).
+End-to-end test: `tests/mcp_e2e.py`.
+
 ## What works today: the engine
 
 `mtapes` records into a `.tape` package (raw HEVC video, `events.jsonl`, `pointer.bin`, `meta.json`):

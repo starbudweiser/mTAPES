@@ -1,6 +1,8 @@
 import CoreGraphics
 import Foundation
+#if canImport(MTapesEngine)
 import MTapesEngine
+#endif
 
 // mtapes : moteur d'enregistrement en ligne de commande (étape 1 de mTAPES).
 // Aucune fenêtre, aucun focus : les essais et les mesures se font en arrière-plan.
@@ -76,6 +78,7 @@ mtapes <commande>
   record [cible] --seconds N     enregistre une prise .tape (--out DIR --name NOM --profile light|balanced|max)
   bench  [cible] --seconds N     enregistre et mesure : processeur, images, poids, délais (--keep garde la prise, --quality mesure SSIM/PSNR)
   encode-bench --input F.mov     réencode une séquence source avec un profil et mesure poids, vitesse, SSIM, PSNR
+  mcp [--dev]                    serveur MCP (stdio) : transmet les outils tapes_* à l'appli mTAPES (pilotage par IA activé dans son menu)
   info   CHEMIN.tape             affiche les métadonnées d'une prise
 cible : --display N | --window ID | --app BUNDLE | --zone x,y,l,h   (par défaut : écran principal)
 options moteur : --fps N --pixel 420v|x420|BGRA
@@ -126,6 +129,9 @@ func run() async {
             printJSON(try QualityCheck.measure(raw: out, reference: URL(fileURLWithPath: input)))
             try? FileManager.default.removeItem(at: out)
         } catch { fail("\(error)") }
+
+    case "mcp":
+        MCPServer(dev: rest.flags.contains("dev") || ProcessInfo.processInfo.environment["MTAPES_DEV"] == "1").run()
 
     case "info":
         guard let path = rest.positional.first else { fail("info attend le chemin d'une prise .tape") }

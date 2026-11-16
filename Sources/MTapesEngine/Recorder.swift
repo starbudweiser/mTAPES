@@ -45,6 +45,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
     private var streamStoppedAt: Double?
     private var stopped = false
     private var reported = Set<String>()
+    private var declared: [TapeEvent] = []          // actions annoncées par l'IA (source « declared »)
     private var watchdog: DispatchSourceTimer?
     private var persister: DispatchSourceTimer?
     fileprivate var holder: StreamHolder?
@@ -94,7 +95,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
         guard let firstPTS, !stopped else { return }
         let first = CMTimeGetSeconds(firstPTS)
         let snap = events.snapshot()
-        let rebased = snap.events.compactMap { e -> TapeEvent? in var e = e; e.t -= first; return e.t >= -0.1 ? e : nil }
+        let rebased = (snap.events + declared).sorted { $0.t < $1.t }.compactMap { e -> TapeEvent? in var e = e; e.t -= first; return e.t >= -0.1 ? e : nil }
         try? EventLog.encode(rebased).write(to: package.eventsURL, options: .atomic)
         let track = snap.samples.map { (t: $0.t - first, x: $0.x, y: $0.y) }.filter { $0.t >= -0.1 }
         try? PointerTrack.encode(track).write(to: package.pointerURL, options: .atomic)
@@ -107,6 +108,30 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
         m.stats.framesDropped = writer.dropped
         try? package.writeMeta(m)
     }
+
+    // MARK: Actions annoncées, état
+
+    /// Enregistre une action annoncée (clic, saisie, chapitre…) à l'instant présent ; renvoie son temps dans la vidéo si la première image est arrivée.
+    @discardableResult
+    public func mark(kind: String, x: Double?, y: Double?, label: String?, button: String? = nil) -> Double? {
+        queue.sync {
+            let t = HostClock.now()
+            declared.append(TapeEvent(t: t, kind: kind, x: x, y: y, button: button, source: "declared", label: label))
+            return firstPTS.map { t - CMTimeGetSeconds($0) }
+        }
+    }
+
+    /// Compteurs en direct (images écrites, refusées…).
+    public var liveStats: TapeMeta.Stats {
+        queue.sync {
+            var s = stats
+            s.framesWritten = writer.written
+            s.framesDropped = writer.dropped
+            return s
+        }
+    }
+
+    public var packageURL: URL { package.url }
 
     // MARK: SCStreamOutput
 
@@ -178,7 +203,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
         let attrs = try? FileManager.default.attributesOfItem(atPath: package.rawURL.path)
         stats.bytes = (attrs?[.size] as? NSNumber)?.int64Value ?? 0
 
-        let rebased = recorded.events.compactMap { e -> TapeEvent? in
+        let rebased = (recorded.events + declared).sorted { $0.t < $1.t }.compactMap { e -> TapeEvent? in
             var e = e; e.t -= first
             return e.t >= -0.1 ? e : nil
         }

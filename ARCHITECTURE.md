@@ -73,6 +73,11 @@ Une prise = un dossier `~/Movies/mTAPES/<nom>.tape/`, jamais modifié après l'a
 
 ## 5. Interface MCP (ouverte à toute IA)
 
+> **État au 16/11/2026 : implémenté (enregistrement seulement).** `mtapes-cli mcp` (dans le paquet, stdio, JSON-RPC 2.0) transmet à l'appli par un socket Unix `~/Library/Application Support/mTAPES[-dev]/mcp.sock` (droits 600, dossier 700,
+> contrôle de l'utilisateur pair) ; l'appli détient l'autorisation d'écran. **Désactivé par défaut** (case « Pilotage par IA » du menu, icône « IA » tant qu'il est ouvert). Outils réels : `tapes_list_targets`, `tapes_start`, `tapes_mark`, `tapes_status`,
+> `tapes_stop`, `tapes_list` ; arrêt automatique après `max_seconds` (600). Les marques sont enregistrées avec la source `declared`. Essai de bout en bout : `tests/mcp_e2e.py` (16 vérifications). **Pas encore** : `tapes_finish`, `tapes_export`,
+> `tapes_summary`, `tapes_apply_plan`, `tapes_delete`, accord par client à la première prise, HTTP local, outil de raccordement en un clic.
+
 Processus auxiliaire `mtapes-mcp` dans `Contents/MacOS/`, protocole MCP (JSON-RPC 2.0) en **stdio** ; il parle à l'appli par un
 **socket Unix** `~/Library/Application Support/mTAPES/mcp.sock` (droits 600). **HTTP local** facultatif (`127.0.0.1`, jeton obligatoire,
 désactivé par défaut) pour les clients qui ne lancent pas de commande. Raccordement en un clic (Claude Code, Claude Desktop, Codex,

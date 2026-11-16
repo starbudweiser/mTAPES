@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""Essai de bout en bout du serveur MCP : lance `mtapes-cli mcp` (stdio), pilote une vraie prise de l'écran principal
+(l'appli mTAPES doit tourner avec « Pilotage par IA » coché) et vérifie la prise produite.
+Usage : tests/mcp_e2e.py CHEMIN/mtapes-cli [--dev]"""
+import json, subprocess, sys, time, os
+
+cli = sys.argv[1]
+args = [cli, "mcp"] + (["--dev"] if "--dev" in sys.argv else [])
+p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+nid = 0
+def rpc(method, params=None, notify=False):
+    global nid
+    msg = {"jsonrpc": "2.0", "method": method}
+    if params is not None: msg["params"] = params
+    if not notify:
+        nid += 1; msg["id"] = nid
+    p.stdin.write(json.dumps(msg) + "\n"); p.stdin.flush()
+    if notify: return None
+    return json.loads(p.stdout.readline())
+def call(tool, **arguments):
+    r = rpc("tools/call", {"name": tool, "arguments": arguments})["result"]
+    text = r["content"][0]["text"]
+    try: data = json.loads(text)
+    except Exception: data = text
+    return r["isError"], data
+ok = True
+def check(cond, what):
+    global ok
+    print(("  ✓ " if cond else "  ✗ ") + what)
+    ok = ok and cond
+
+init = rpc("initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "essai", "version": "1"}})
+check(init["result"]["serverInfo"]["name"] == "mtapes" and "instructions" in init["result"], "initialize : nom du serveur et instructions")
+rpc("notifications/initialized", notify=True)
+tools = [t["name"] for t in rpc("tools/list")["result"]["tools"]]
+check(sorted(tools) == sorted(["tapes_list_targets", "tapes_start", "tapes_mark", "tapes_status", "tapes_stop", "tapes_list"]), f"tools/list : {len(tools)} outils")
+check(rpc("ping")["result"] == {}, "ping")
+check("error" in rpc("inconnu"), "méthode inconnue : erreur JSON-RPC")
+
+err, targets = call("tapes_list_targets", kind="display")
+check(not err and isinstance(targets, list) and targets and "display" in targets[0], f"tapes_list_targets : {len(targets) if isinstance(targets, list) else targets} écran(s)")
+err, e = call("tapes_mark", kind="click", x=1, y=1)
+check(err, "tapes_mark sans prise : erreur claire")
+err, d = call("tapes_start", target="display", name="essai MCP", client="essai", max_seconds=60)
+check(not err and "tape_path" in d, f"tapes_start : {d.get('tape_path') if isinstance(d, dict) else d}")
+err, e = call("tapes_start", target="display")
+check(err, "second tapes_start : refusé pendant une prise")
+t0 = time.time()
+time.sleep(0.8)
+err, m1 = call("tapes_mark", kind="chapter", label="Lancement")
+err2, m2 = call("tapes_mark", kind="click", x=640, y=360, label="Choisir un dossier")
+time.sleep(1.0)
+err3, m3 = call("tapes_mark", kind="type", x=700, y=400, label="Nom de la sauvegarde")
+check(not (err or err2 or err3) and m2.get("video_time_s") is not None, f"tapes_mark ×3 (temps vidéo {m2.get('video_time_s')} s)")
+err, st = call("tapes_status")
+check(not err and st["phase"] == "recording" and st["frames_written"] > 0, f"tapes_status : {st['phase']}, {st.get('frames_written')} images")
+time.sleep(max(0, 3.5 - (time.time() - t0)))
+err, stop = call("tapes_stop")
+check(not err and stop["duration_s"] > 2.5 and stop["frames_refused"] == 0 and stop["events"] >= 3, f"tapes_stop : {stop.get('duration_s')} s, {stop.get('megabytes')} Mo, {stop.get('events')} marques")
+err, lst = call("tapes_list", limit=3)
+check(not err and lst and lst[0]["origin"] == "mcp" and lst[0]["state"] == "complete", "tapes_list : la prise est en tête, origine mcp")
+
+path = stop["tape_path"]
+events = [json.loads(l) for l in open(os.path.join(path, "events.jsonl")) if l.strip()]
+declared = [e for e in events if e["source"] == "declared"]
+check([e["label"] for e in declared] == ["Lancement", "Choisir un dossier", "Nom de la sauvegarde"], "events.jsonl : 3 actions annoncées, dans l'ordre, avec leurs libellés")
+check(all(a["t"] <= b["t"] for a, b in zip(events, events[1:])), "événements triés par temps")
+meta = json.load(open(os.path.join(path, "meta.json")))
+check(meta["origin"] == "mcp" and meta["client"] == "essai" and meta["state"] == "complete", "meta.json : origine mcp, client, état complet")
+dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", os.path.join(path, "raw.mov")], capture_output=True, text=True).stdout)
+check(abs(dur - stop["duration_s"]) < 0.3, f"raw.mov lisible, durée {dur:.2f} s")
+p.stdin.close(); p.wait(timeout=5)
+print("TAPE", path)
+print("RÉSULTAT :", "OK" if ok else "ÉCHEC")
+sys.exit(0 if ok else 1)

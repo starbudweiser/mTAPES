@@ -35,6 +35,13 @@ final class AppModel: ObservableObject {
     /// Un résultat (ou une erreur) est arrivé pendant que la fenêtre n'était pas à l'écran : l'icône de la barre de menus le signale.
     @Published var unseen: Bool = false
     @Published var lastSummary: TapeSummary?
+    /// Pilotage par IA (MCP) : désactivé par défaut ; tant qu'il est coché dans le menu, un socket privé accepte les commandes du même utilisateur.
+    @Published var mcpEnabled: Bool = UserDefaults.standard.bool(forKey: "mcpEnabled") {
+        didSet {
+            UserDefaults.standard.set(mcpEnabled, forKey: "mcpEnabled")
+            RemoteControl.shared.apply(enabled: mcpEnabled)
+        }
+    }
 
     private var session: RecordingSession?
     private var ticker: Timer?
@@ -88,27 +95,11 @@ final class AppModel: ObservableObject {
         problem = nil
         stopWhenStarted = false
         phase = .starting                              // posé avant toute attente : un second déclenchement est ignoré
+        let target: CaptureTarget = (kind == .window && selectedWindow != nil) ? .window(id: selectedWindow!) : .display(index: nil)
         Task { [weak self] in
             guard let self else { return }
             do {
-                var options = CaptureOptions()
-                let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH.mm.ss"
-                options.name = "\(L.t("take.name")) \(f.string(from: Date()))"
-                options.origin = "manual"
-                let target: CaptureTarget = (kind == .window && selectedWindow != nil) ? .window(id: selectedWindow!) : .display(index: nil)
-                let s = try await Recorder.start(target: target, options: options, outputDirectory: Self.outputDirectory)
-                s.onProblem = { [weak self] p in Task { @MainActor in self?.problem = Self.describe(p) } }
-                session = s
-                startedAt = Date(); elapsed = 0
-                phase = .recording
-                ticker?.invalidate()
-                ticker = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
-                    Task { @MainActor in
-                        guard let self else { return }
-                        self.elapsed = Date().timeIntervalSince(self.startedAt)
-                    }
-                }
-                if stopWhenStarted { stop() }
+                try await beginTake(target: target, origin: "manual", client: nil, name: nil, profile: .balanced, maxSeconds: nil)
             } catch {
                 screenAllowed = Permissions.screenRecording
                 fail(error)
@@ -116,25 +107,68 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Démarre la prise ; l'appelant a déjà posé la phase `.starting`. Sert au bouton, au raccourci et au pilotage par IA.
+    func beginTake(target: CaptureTarget, origin: String, client: String?, name: String?, profile: QualityProfile, maxSeconds: Int?) async throws {
+        var options = CaptureOptions()
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH.mm.ss"
+        let base = name?.trimmingCharacters(in: .whitespacesAndNewlines).prefix(60).description
+        options.name = "\(base?.isEmpty == false ? base! : L.t("take.name")) \(f.string(from: Date()))"
+        options.origin = origin
+        options.client = client
+        options.profile = profile
+        let s = try await Recorder.start(target: target, options: options, outputDirectory: Self.outputDirectory)
+        s.onProblem = { [weak self] p in Task { @MainActor in self?.problem = Self.describe(p) } }
+        session = s
+        if case .window(let id) = target { markWindowID = id } else { markWindowID = nil }
+        startedAt = Date(); elapsed = 0
+        phase = .recording
+        ticker?.invalidate()
+        ticker = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.elapsed = Date().timeIntervalSince(self.startedAt)
+            }
+        }
+        if let maxSeconds {
+            Task { [weak self] in                      // garde-fou : une prise pilotée s'arrête seule
+                try? await Task.sleep(nanoseconds: UInt64(max(5, maxSeconds)) * 1_000_000_000)
+                guard let self, self.session === s, self.phase == .recording else { return }
+                self.stop()
+            }
+        }
+        if stopWhenStarted { stop() }
+    }
+
     func stop() {
-        guard phase == .recording, let s = session else { return }
+        guard phase == .recording else { return }
+        Task { _ = await finishTake() }
+    }
+
+    /// Termine la prise en cours et renvoie son résumé.
+    @discardableResult
+    func finishTake() async -> Result<TapeSummary, Error> {
+        guard phase == .recording, let s = session else { return .failure(ControlError("Aucune prise en cours.")) }
         ticker?.invalidate(); ticker = nil
         phase = .finishing
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let (package, meta) = try await s.stop()
-                let summary = TapeSummary(url: package.url, seconds: meta.durationSeconds, bytes: meta.stats.bytes,
-                                          frames: meta.stats.framesWritten, dropped: meta.stats.framesDropped)
-                lastSummary = summary
-                unseen = true
-                phase = .done(summary)
-            } catch {
-                fail(error)
-            }
-            session = nil
+        defer { session = nil }
+        do {
+            let (package, meta) = try await s.stop()
+            let summary = TapeSummary(url: package.url, seconds: meta.durationSeconds, bytes: meta.stats.bytes,
+                                      frames: meta.stats.framesWritten, dropped: meta.stats.framesDropped)
+            lastSummary = summary
+            unseen = true
+            phase = .done(summary)
+            return .success(summary)
+        } catch {
+            fail(error)
+            return .failure(error)
         }
     }
+
+    // MARK: Pilotage par IA (lu par RemoteControl)
+
+    var currentSession: RecordingSession? { session }
+    private(set) var markWindowID: UInt32?
 
     /// Quitter pendant une prise : on termine proprement la prise avant de fermer (appelé par applicationShouldTerminate).
     func finishThenQuit(_ done: @escaping @MainActor () -> Void) {
