@@ -6,22 +6,20 @@ A native macOS screen recorder that edits your demos for you, and that any AI ca
 
 ## About
 
-mTAPES is made by Starbudweiser & Claude Code (Anthropic). Part of the **DESKTOP MAC TOOLKIT**. MIT License, © 2026 Starbudweiser. Provided as is, without warranty. An "About mTAPES" window will be available in the app menu once the app exists.
+mTAPES is made by Starbudweiser & Claude Code (Anthropic). Part of the **DESKTOP MAC TOOLKIT**. MIT License, © 2026 Starbudweiser. Provided as is, without warranty. "About mTAPES" is in the app menu.
 
 ## Status
 
-**Early preview (0.1.x).** Today mTAPES is a menu-bar app with a Simple mode that records the whole screen or one window (shortcut ⌥⌘R) and saves a `.tape` take in `~/Movies/mTAPES`,
-plus a command-line recording engine (`mtapes`). **Not built yet:** automatic editing, export, AI and MCP control, Advanced mode, audio, automatic updates. Requires **macOS 15 or later on Apple Silicon**
-and the Screen Recording permission. Design mockups: [`maquettes/index.html`](maquettes/index.html) (open it in a browser); plan: [`ARCHITECTURE.md`](ARCHITECTURE.md) (French).
+**Pre-release (0.8.x).** A menu-bar app for macOS 15+ on Apple Silicon (Screen Recording permission), signed and notarized, with automatic updates.
 
-## Planned
+- **Record**: a screen, a window (even covered), an application or a zone (shortcut ⌥⌘R); saves a `.tape` take in `~/Movies/mTAPES`. A take stops cleanly when the Mac sleeps or the screen locks.
+- **Finish**: automatic zooms, sped-up dead time, captions, smoothed cursor, frame and background; exports GIF (README), MP4 1080p (release) and vertical MP4 (short).
+- **Edit**: take library, hand-editing of zooms, speeds and captions with a live preview; the raw video is never modified.
+- **AI**: MCP server (10 tools) so any AI can record, announce its actions and edit the take itself.
+- **Two modes** (Simple / Advanced) and a setup assistant; French, English, Spanish, Italian.
+- **Not yet**: audio, HDR/P3, an on-device editing engine when no AI is connected. A window that grows beyond its starting size is cropped.
 
-- Two modes in one app: **Simple** (what to film, which style, Record) and **Advanced** (finishing timeline, AI/MCP control, full settings), with a setup assistant.
-- **Record the way you want**: a screen, a window (even hidden), an application, or a zone.
-- **Automatic finishing**: zooms on clicks, dead time sped up, smoothed cursor, click effects, frame and background, 16:9 / 9:16 / 1:1.
-- **AI editing**: one button, three variants, every decision explained and undoable; free on-device engines first (Apple Intelligence, local models), rules-based fallback, nothing leaves the Mac by default.
-- **MCP server** so Claude Code, Codex, Cursor or any other AI can start a recording, announce its clicks, and get a finished demo (GIF for a README, MP4 for a release, vertical video for social networks).
-- Light files: adaptive frame rate, hardware HEVC, optimized GIF.
+Design mockups: [`maquettes/index.html`](maquettes/index.html); plan: [`ARCHITECTURE.md`](ARCHITECTURE.md) (French). Click/video sync measured under one frame (6 to 18 ms).
 
 ## AI auto-edit
 
@@ -71,4 +69,4 @@ Un enregistreur d'écran macOS natif qui monte vos démos tout seul, et que n'im
 
 **À propos** : mTAPES est réalisé par Starbudweiser & Claude Code (Anthropic). Fait partie du **DESKTOP MAC TOOLKIT**. Licence MIT, © 2026 Starbudweiser. Fourni en l'état, sans garantie.
 
-**État** : développement précoce, seul le moteur d'enregistrement existe (ligne de commande). Maquettes : [`maquettes/index.html`](maquettes/index.html) ; plan : [`ARCHITECTURE.md`](ARCHITECTURE.md). Premiers chiffres mesurés : [`bench/RESULTS.md`](bench/RESULTS.md).
+**État** : version préliminaire 0.8.x, appli de barre de menus (macOS 15+, Apple Silicon), signée, notarisée, avec mise à jour automatique. Enregistrement d'un écran, d'une fenêtre, d'une appli ou d'une zone ; finition automatique (zooms, temps morts accélérés, légendes, curseur, cadre) ; exports GIF, MP4 1080p et vertical ; bibliothèque et retouche à la main avec aperçu ; serveur MCP (10 outils) pour qu'une IA enregistre et monte ; modes Simple et Avancé ; 4 langues. **Pas encore** : audio, HDR/P3, moteur de montage local sans IA. Maquettes : [`maquettes/index.html`](maquettes/index.html) ; plan : [`ARCHITECTURE.md`](ARCHITECTURE.md). Chiffres mesurés : [`bench/RESULTS.md`](bench/RESULTS.md).
