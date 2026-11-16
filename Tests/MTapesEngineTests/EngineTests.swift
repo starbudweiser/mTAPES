@@ -420,4 +420,23 @@ final class ConnectorTests: XCTestCase {
         do { _ = try await Recorder.start(target: .display(index: nil), options: options, outputDirectory: dir); XCTFail("devrait échouer") }
         catch let e as EngineError { if case .targetNotFound = e {} else { XCTFail("mauvaise erreur : \(e)") } }
     }
+
+    func testUpdateVersionCompare() {
+        XCTAssertTrue(UpdateLogic.isNewer("v1.0.1", than: "1.0.0"))
+        XCTAssertTrue(UpdateLogic.isNewer("1.10", than: "1.9.9"))
+        XCTAssertFalse(UpdateLogic.isNewer("v1.0.0", than: "1.0"))
+        XCTAssertFalse(UpdateLogic.isNewer("1.0.0", than: "1.0.1"))
+    }
+
+    func testUpdateAssetChoice() throws {
+        let assets = [ReleaseAsset(name: "mTAPES-1.0.1-macOS-arm64.zip.sha256", url: "u/sha"),
+                      ReleaseAsset(name: "mTAPES-1.0.1-macOS-x86_64.zip", url: "u/intel"),
+                      ReleaseAsset(name: "mTAPES-1.0.1-macOS-arm64.zip", url: "u/zip")]
+        let pick = try XCTUnwrap(UpdateLogic.pickAsset(assets))
+        XCTAssertEqual(pick.zip.url, "u/zip")
+        XCTAssertEqual(pick.sha256?.url, "u/sha")
+        XCTAssertNil(UpdateLogic.pickAsset([ReleaseAsset(name: "source.tar.gz", url: "x")]))
+        XCTAssertEqual(UpdateLogic.parseSHA256(String(repeating: "AB", count: 32) + "  mTAPES.zip"), String(repeating: "ab", count: 32))
+        XCTAssertNil(UpdateLogic.parseSHA256("pas un hash"))
+    }
 }

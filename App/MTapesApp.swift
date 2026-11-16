@@ -24,6 +24,12 @@ struct MTapesApp: App {
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(CommandLine.arguments.contains("--show-ai") ? .presented : .suppressed)
 
+        Window(L.t("upd.title"), id: "updates") {
+            UpdateView(model: model)
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(CommandLine.arguments.contains("--show-updates") ? .presented : .suppressed)
+
         Window(L.t("setup.title"), id: "setup") {
             SetupHost(model: model)
         }
@@ -58,6 +64,7 @@ struct MTapesApp: App {
                     ForEach(model.approvedClients, id: \.self) { c in Button(L.t("menu.mcp.revoke", c)) { model.revoke(c) } }
                 }
             }
+            Button(L.t("menu.update")) { openWindow(id: "updates"); NSApp.activate(); Task { await Updater.shared.check() } }
             Divider()
             Button(L.t("menu.about")) { About.show() }
             Button(L.t("menu.quit")) { NSApp.terminate(nil) }.keyboardShortcut("q")
@@ -159,6 +166,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         AppModel.shared.watchSystem()
+        // Mise à jour automatique : première vérification 1 min après le lancement, puis toutes les 15 min (une recherche par jour, installation hors prise ou export).
+        Timer.scheduledTimer(withTimeInterval: 60, repeats: false) { _ in Task { @MainActor in Updater.shared.tick() } }
+        Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { _ in Task { @MainActor in Updater.shared.tick() } }
         RemoteControl.shared.apply(enabled: AppModel.shared.mcpEnabled)
         RemoteControl.shared.applyHTTP(enabled: AppModel.shared.mcpHTTPEnabled)
         // ⌥⌘R : touche R (code 15), modificateurs Commande (256) + Option (2048).

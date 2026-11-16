@@ -43,6 +43,7 @@ enum HeavyLock {
 public enum Exporter {
     public static func export(_ package: TapePackage, destination: Destination, spec: FinishingSpec? = nil, targetMegabytes: Double? = nil,
                               outputDirectory: URL? = nil, progress: (@Sendable (Double) -> Void)? = nil) async throws -> ExportResult {
+        ActiveExports.begin(); defer { ActiveExports.end() }
         let requested = Date()
         // Calque : celui qui est donné, sinon celui de la prise s'il vise la même destination (retouches conservées, cadre adapté à la destination), sinon un calque neuf.
         let finishing: FinishingSpec
