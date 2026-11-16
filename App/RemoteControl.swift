@@ -74,6 +74,7 @@ final class RemoteControl {
                 let target = try parseTarget(p)
                 let profile = QualityProfile(rawValue: p?["profile"]?.string ?? "balanced") ?? .balanced
                 model.problem = nil
+                model.systemStop = nil
                 model.phase = .starting
                 do {
                     try await model.beginTake(target: target, origin: "mcp", client: p?["client"]?.string, name: p?["name"]?.string,
@@ -112,9 +113,19 @@ final class RemoteControl {
                     r["frames_refused"] = .number(Double(st.framesDropped))
                 }
                 if let problem = model.problem { r["problem"] = .string(problem) }
+                if let why = model.systemStop {
+                    r["stopped_by"] = .string(why == "lock" ? "screen locked" : "Mac sleep")
+                    if let last = model.lastSummary { r["tape_path"] = .string(last.url.path) }
+                }
                 return ok(request, r)
 
             case "stop":
+                // Le système (veille, verrouillage) a déjà arrêté la prise : on rend la prise enregistrée au lieu d'une erreur.
+                if model.phase != .recording, let why = model.systemStop, let s = model.lastSummary {
+                    return ok(request, ["tape_path": .string(s.url.path), "duration_s": .number((s.seconds * 100).rounded() / 100),
+                                        "megabytes": .number((Double(s.bytes) / 10_000).rounded() / 100), "frames": .number(Double(s.frames)),
+                                        "frames_refused": .number(Double(s.dropped)), "stopped_by": .string(why == "lock" ? "screen locked" : "Mac sleep")])
+                }
                 guard model.phase == .recording else { throw ControlError("No take is recording.") }
                 switch await model.finishTake() {
                 case .success(let s):

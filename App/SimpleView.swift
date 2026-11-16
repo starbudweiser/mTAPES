@@ -247,6 +247,7 @@ private struct DoneBody: View {
                 .socle(Socle.T.stat).foregroundStyle(Socle.C.accentText).fixedSize(horizontal: false, vertical: true)
             Text(L.t("done.where", summary.url.deletingLastPathComponent().path.replacingOccurrences(of: NSHomeDirectory(), with: "~")))
                 .socle(Socle.T.mono).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true)
+            if let why = model.systemStop { Note(text: L.t("done.stoppedby." + why)) }
             Note(text: L.t("done.note"))
             HStack(spacing: Socle.M.space2) {
                 Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([summary.url]) }

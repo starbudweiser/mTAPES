@@ -154,6 +154,7 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
             return
         }
         guard CMSampleBufferGetImageBuffer(sampleBuffer) != nil else { return }
+        noteContentRect(attachments.first?[.contentRect])
         stats.framesComplete += 1
         let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         if firstPTS == nil {
@@ -163,6 +164,19 @@ public final class RecordingSession: NSObject, SCStreamOutput, SCStreamDelegate 
         writer.append(sampleBuffer)
         reference?.append(sampleBuffer)
         if writer.failure != nil { report(.writerFailed) }
+    }
+
+    /// Taille de la zone filmée : un changement (fenêtre redimensionnée) devient un événement « resize » du journal, pour que le montage sache que les positions ont bougé.
+    private var lastContentSize: CGSize?
+    private var lastResizeAt = 0.0
+    private func noteContentRect(_ value: Any?) {
+        guard let dict = value as? NSDictionary, let rect = CGRect(dictionaryRepresentation: dict as CFDictionary), rect.width > 0 else { return }
+        defer { lastContentSize = rect.size }
+        guard let last = lastContentSize else { return }
+        let now = HostClock.now()
+        guard abs(rect.width - last.width) > 2 || abs(rect.height - last.height) > 2, now - lastResizeAt > 0.5 else { return }
+        lastResizeAt = now
+        declared.append(TapeEvent(t: now, kind: "resize", source: "detected", label: "\(Int(rect.width))x\(Int(rect.height))"))
     }
 
     public func stream(_ stream: SCStream, didStopWithError error: Error) {

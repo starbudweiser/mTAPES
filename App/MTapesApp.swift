@@ -158,6 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             render(to: args[i + 1], args: args)
             return
         }
+        AppModel.shared.watchSystem()
         RemoteControl.shared.apply(enabled: AppModel.shared.mcpEnabled)
         RemoteControl.shared.applyHTTP(enabled: AppModel.shared.mcpHTTPEnabled)
         // ⌥⌘R : touche R (code 15), modificateurs Commande (256) + Option (2048).

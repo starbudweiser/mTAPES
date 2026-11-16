@@ -34,6 +34,8 @@ final class AppModel: ObservableObject {
     @Published var problem: String?
     /// Un résultat (ou une erreur) est arrivé pendant que la fenêtre n'était pas à l'écran : l'icône de la barre de menus le signale.
     @Published var unseen: Bool = false
+    /// « sleep » ou « lock » quand le système a interrompu la prise (elle est alors arrêtée et enregistrée telle quelle).
+    @Published var systemStop: String?
     /// Mode d'usage : Simple (une fenêtre) ou Avancé (bibliothèque et pilotage par IA). Sans choix enregistré : Avancé, pour ne rien masquer à qui l'utilise déjà.
     enum UsageMode: String { case simple, advanced }
     @Published var mode: UsageMode = UsageMode(rawValue: UserDefaults.standard.string(forKey: "usageMode") ?? "") ?? .advanced {
@@ -121,6 +123,7 @@ final class AppModel: ObservableObject {
         screenAllowed = Permissions.screenRecording
         problem = nil
         stopWhenStarted = false
+        systemStop = nil
         phase = .starting                              // posé avant toute attente : un second déclenchement est ignoré
         let target: CaptureTarget = (kind == .window && selectedWindow != nil) ? .window(id: selectedWindow!) : .display(index: nil)
         Task { [weak self] in
@@ -164,6 +167,27 @@ final class AppModel: ObservableObject {
             }
         }
         if stopWhenStarted { stop() }
+    }
+
+    private var watching = false
+    /// Veille du Mac, écran éteint, session verrouillée : le flux d'écran s'arrête de lui-même ; on termine donc la prise proprement tout de suite.
+    func watchSystem() {
+        guard !watching else { return }
+        watching = true
+        let ws = NSWorkspace.shared.notificationCenter
+        ws.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.stopForSystem("sleep") } }
+        ws.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.stopForSystem("sleep") } }
+        DistributedNotificationCenter.default().addObserver(forName: Notification.Name("com.apple.screenIsLocked"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.stopForSystem("lock") }
+        }
+    }
+
+    func stopForSystem(_ reason: String) {
+        switch phase {
+        case .recording: systemStop = reason; stop()
+        case .starting: systemStop = reason; stopWhenStarted = true
+        default: break
+        }
     }
 
     func stop() {

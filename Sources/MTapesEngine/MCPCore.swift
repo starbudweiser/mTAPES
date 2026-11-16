@@ -15,7 +15,7 @@ public struct MCPCore: Sendable {
     and tapes_mark kind=chapter at the start of each phase -> tapes_stop. Marks become the editing script: zooms and captions follow them, so label them well \
     (e.g. "Choose a folder", not "click"). Coordinates are in points; use space=window for positions relative to the filmed window's top-left corner. \
     After tapes_stop, for the best result edit it yourself: tapes_summary -> tapes_apply_plan (see prompt edit_demo). Or quickly: tapes_finish (plans zooms on your marked actions, speeds up dead time, captions from your labels; optional) -> tapes_export with destination readme (light GIF for a README), release (1080p MP4) or short (vertical 9:16 MP4). \
-    Never leave a take running: always call tapes_stop (a take also stops by itself after max_seconds, default 600). One take at a time.
+    If the Mac sleeps or the screen locks, mTAPES stops and saves the take by itself: tapes_status and tapes_stop then report stopped_by and the take path. Never leave a take running: always call tapes_stop (a take also stops by itself after max_seconds, default 600). One take at a time.
     """
 
     public func tools() -> [[String: Any]] {
