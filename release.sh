@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Publie une version : tests, compilation, notarisation (Apple), zip, puis release GitHub (pré-version tant que l'appli est un aperçu : PRERELEASE=0 pour une version stable).
+# Publie une version : tests, compilation, notarisation (Apple), zip, puis release GitHub (version stable par défaut ; PRERELEASE=1 pour une pré-version, invisible de la mise à jour automatique).
 # Usage : ./release.sh ["notes en anglais"]   — la version vient de CFBundleShortVersionString (Resources/Info.plist).
 # La release est créée AVANT tout tag local ; GitHub crée le tag sur main (un échec en route ne laisse pas de tag orphelin).
 set -euo pipefail
@@ -30,7 +30,7 @@ mv "$DIST/mTAPES.zip" "$ZIP"
 (cd "$DIST" && shasum -a 256 "$(basename "$ZIP")" > "$(basename "$ZIP").sha256")
 
 FLAGS=()
-[ "${PRERELEASE:-1}" = 1 ] && FLAGS+=(--prerelease)
+[ "${PRERELEASE:-0}" = 1 ] && FLAGS+=(--prerelease)
 gh release create "$TAG" "$ZIP" "$ZIP.sha256" --target main --title "mTAPES $VERSION" --notes "$NOTES" "${FLAGS[@]}"
 git fetch -q --tags origin
 echo "✓ https://github.com/starbudweiser/mTAPES/releases/tag/$TAG"
