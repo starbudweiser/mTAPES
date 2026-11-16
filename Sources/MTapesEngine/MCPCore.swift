@@ -24,8 +24,8 @@ public struct MCPCore: Sendable {
         }
         return [
             ["name": "tapes_list_targets",
-             "description": "List what can be filmed: displays (index, size), open windows (window_id, app, title, bounds) and running applications. Use the window_id with tapes_start target=window.",
-             "inputSchema": schema(["kind": ["type": "string", "enum": ["display", "window", "app"], "description": "Only this kind (default: all)."]])],
+             "description": "List what can be filmed: displays (index, size), open windows (window_id, app, title, bounds), running applications, and the microphones (id, name, default) for tapes_start mic_device. Use the window_id with tapes_start target=window.",
+             "inputSchema": schema(["kind": ["type": "string", "enum": ["display", "window", "app", "microphone"], "description": "Only this kind (default: all). microphone lists the microphones usable with tapes_start audio=mic."]])],
             ["name": "tapes_start",
              "description": "Start a take. target=display films a whole screen (display = 1-based index, default main screen); target=window films one window even if other windows cover it (window_id from tapes_list_targets); target=app films one application's windows (app_bundle); target=zone films a rectangle of a screen (zone in points). Returns the take path. Fails if a take is already running or if the user has not enabled AI control in mTAPES.",
              "inputSchema": schema([
@@ -38,6 +38,7 @@ public struct MCPCore: Sendable {
                 "profile": ["type": "string", "enum": ["light", "balanced", "max"], "description": "Quality profile (default balanced)."],
                 "max_seconds": ["type": "integer", "description": "Safety limit; the take stops by itself after this many seconds (default 600)."],
                 "audio": ["type": "string", "enum": ["none", "system", "mic", "both"], "description": "Record sound as separate tracks: system = the Mac's sound (not mTAPES), mic = the microphone (the user may be asked to allow it), both. Default none. Sound is kept in exports at normal speed only."],
+                "mic_device": ["type": "string", "description": "Microphone name or id from tapes_list_targets kind=microphone (with audio=mic or both). Default: the system default microphone."],
                 "color": ["type": "string", "enum": ["srgb", "p3"], "description": "Colour space of the take: srgb (default, right everywhere: web, README, GIF) or p3 (Display P3, more vivid on wide-gamut screens, Safari, QuickTime; GIF stays sRGB). HDR screens are filmed in SDR."],
                 "client": ["type": "string", "description": "Your name (e.g. Claude Code), recorded in the take."],
              ])],

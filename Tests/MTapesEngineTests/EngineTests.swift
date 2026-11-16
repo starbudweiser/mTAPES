@@ -400,4 +400,24 @@ final class ConnectorTests: XCTestCase {
         let plan = Planner.plan(.init(meta: meta, events: events + [click]), preset: .release)
         XCTAssertEqual(plan.zooms.first?.fx ?? 0, 0.5, accuracy: 0.01)
     }
+
+    func testMicrophoneListAndLookup() {
+        let all = Microphones.list()
+        XCTAssertEqual(Set(all.map(\.id)).count, all.count)                     // pas de doublon
+        XCTAssertLessThanOrEqual(all.filter(\.isDefault).count, 1)
+        if let first = all.first {                                              // retrouvé par identifiant comme par nom (casse indifférente)
+            XCTAssertEqual(Microphones.find(first.id), first)
+            XCTAssertEqual(Microphones.find(first.name.uppercased()), first)
+        }
+        XCTAssertNil(Microphones.find("micro-qui-n-existe-pas"))
+    }
+
+    func testUnknownMicrophoneFailsBeforeAnyPermissionPrompt() async throws {
+        var options = CaptureOptions()
+        options.captureMicrophone = true; options.microphoneDeviceID = "micro-qui-n-existe-pas"
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("mtapes-mic-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        do { _ = try await Recorder.start(target: .display(index: nil), options: options, outputDirectory: dir); XCTFail("devrait échouer") }
+        catch let e as EngineError { if case .targetNotFound = e {} else { XCTFail("mauvaise erreur : \(e)") } }
+    }
 }

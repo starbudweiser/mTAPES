@@ -82,7 +82,7 @@ final class RemoteControl {
                 do {
                     try await model.beginTake(target: target, origin: "mcp", client: p?["client"]?.string, name: p?["name"]?.string,
                                               profile: profile, maxSeconds: p?["max_seconds"]?.int ?? 600,
-                                              system: ["system", "both"].contains(audio), mic: ["mic", "both"].contains(audio), color: color)
+                                              system: ["system", "both"].contains(audio), mic: ["mic", "both"].contains(audio), micDevice: p?["mic_device"]?.string, color: color)
                 } catch {
                     model.screenAllowed = Permissions.screenRecording
                     model.phase = .failed(AppModel.explain(error))
@@ -202,6 +202,11 @@ final class RemoteControl {
             if let b = t.bundle { row["app_bundle"] = .string(b) }
             if !t.bounds.isEmpty { row["bounds"] = .array(t.bounds.map { .number($0) }) }
             rows.append(.object(row))
+        }
+        if kind == nil || kind == "microphone" {
+            for m in Microphones.list() {
+                rows.append(.object(["kind": .string("microphone"), "title": .string(m.name), "mic_id": .string(m.id), "default": .bool(m.isDefault)]))
+            }
         }
         return .array(rows)
     }

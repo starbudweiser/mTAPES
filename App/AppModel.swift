@@ -52,6 +52,20 @@ final class AppModel: ObservableObject {
     @Published var colorP3: Bool = UserDefaults.standard.bool(forKey: "colorP3") {
         didSet { UserDefaults.standard.set(colorP3, forKey: "colorP3") }
     }
+    /// Micro choisi (nil : micro par défaut du système) et micros branchés.
+    @Published var micDeviceID: String? = UserDefaults.standard.string(forKey: "micDevice") {
+        didSet { UserDefaults.standard.set(micDeviceID, forKey: "micDevice") }
+    }
+    @Published var micDevices: [MicrophoneInfo] = []
+    let micMonitor = MicMonitor()
+    func refreshMics() {
+        micDevices = Microphones.list()
+        if let id = micDeviceID, !micDevices.contains(where: { $0.id == id }) { micDeviceID = nil }     // micro débranché : retour au micro par défaut
+    }
+    /// Niveau d'entrée : actif seulement quand le micro est coché et qu'aucune prise n'est en cours.
+    func updateMicMonitor() {
+        if recordMic, phase == .idle { micMonitor.start(deviceID: micDeviceID) } else { micMonitor.stop() }
+    }
     @Published var recordMic: Bool = UserDefaults.standard.bool(forKey: "recordMic") {
         didSet { UserDefaults.standard.set(recordMic, forKey: "recordMic") }
     }
@@ -139,7 +153,7 @@ final class AppModel: ObservableObject {
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await beginTake(target: target, origin: "manual", client: nil, name: nil, profile: .balanced, maxSeconds: nil, system: recordSystemAudio, mic: recordMic, color: colorP3 ? .p3 : .srgb)
+                try await beginTake(target: target, origin: "manual", client: nil, name: nil, profile: .balanced, maxSeconds: nil, system: recordSystemAudio, mic: recordMic, micDevice: recordMic ? micDeviceID : nil, color: colorP3 ? .p3 : .srgb)
             } catch {
                 screenAllowed = Permissions.screenRecording
                 fail(error)
@@ -148,9 +162,9 @@ final class AppModel: ObservableObject {
     }
 
     /// Démarre la prise ; l'appelant a déjà posé la phase `.starting`. Sert au bouton, au raccourci et au pilotage par IA.
-    func beginTake(target: CaptureTarget, origin: String, client: String?, name: String?, profile: QualityProfile, maxSeconds: Int?, system: Bool = false, mic: Bool = false, color: ColorChoice = .srgb) async throws {
+    func beginTake(target: CaptureTarget, origin: String, client: String?, name: String?, profile: QualityProfile, maxSeconds: Int?, system: Bool = false, mic: Bool = false, micDevice: String? = nil, color: ColorChoice = .srgb) async throws {
         var options = CaptureOptions()
-        options.captureSystemAudio = system; options.captureMicrophone = mic; options.color = color
+        options.captureSystemAudio = system; options.captureMicrophone = mic; options.microphoneDeviceID = micDevice; options.color = color
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH.mm.ss"
         let base = name?.trimmingCharacters(in: .whitespacesAndNewlines).prefix(60).description
         options.name = "\(base?.isEmpty == false ? base! : L.t("take.name")) \(f.string(from: Date()))"

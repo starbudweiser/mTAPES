@@ -14,6 +14,7 @@ public struct CaptureOptions {
     public var client: String?
     public var captureSystemAudio = false          // son du Mac (hors mTAPES), piste à part
     public var color: ColorChoice = .srgb          // sRGB ou Display P3
+    public var microphoneDeviceID: String?         // nil : micro par défaut du système
     public var captureMicrophone = false           // micro, piste à part
     public var referenceURL: URL?                 // banc d'essai : copie quasi sans perte des mêmes images
     public init() {}
@@ -281,7 +282,16 @@ public enum Recorder {
     /// En cas d'échec, rien ne reste sur le disque (le dossier `.tape` créé est supprimé).
     public static func start(target: CaptureTarget, options: CaptureOptions, outputDirectory: URL) async throws -> RecordingSession {
         try ensureDiskSpace(outputDirectory)
-        if options.captureMicrophone, !(await Permissions.ensureMicrophone()) { throw EngineError.microphoneDenied }
+        // Micro : on vérifie d'abord qu'il existe (message clair, sans demande d'autorisation inutile), puis l'autorisation.
+        var micName: String?
+        var micID: String?
+        if options.captureMicrophone {
+            if let key = options.microphoneDeviceID {
+                guard let mic = Microphones.find(key) else { throw EngineError.targetNotFound("micro « \(key) » (branché ? voir tapes_list_targets kind=microphone)") }
+                micID = mic.id; micName = mic.name
+            } else { micName = Microphones.list().first(where: { $0.isDefault })?.name }
+            if !(await Permissions.ensureMicrophone()) { throw EngineError.microphoneDenied }
+        }
         let content = try await TargetCatalog.content()
         let resolved = try TargetCatalog.resolve(target, content: content, excludeOwnApp: options.excludeOwnApp)
         let fps = options.maxFPS ?? options.profile.maxFPS
@@ -298,7 +308,10 @@ public enum Recorder {
         config.queueDepth = 6
         config.capturesAudio = options.captureSystemAudio
         if options.captureSystemAudio { config.excludesCurrentProcessAudio = true; config.sampleRate = 48000; config.channelCount = 2 }
-        if options.captureMicrophone { config.captureMicrophone = true }
+        if options.captureMicrophone {
+            config.captureMicrophone = true
+            if let micID { config.microphoneCaptureDeviceID = micID }
+        }
         config.captureResolution = .best
         if let rect = resolved.sourceRect { config.sourceRect = rect }
 
@@ -328,7 +341,7 @@ public enum Recorder {
             holder.session = session
             session.holder = holder
             if options.captureSystemAudio { session.systemAudio = AudioWriter(kind: "system", url: package.url.appendingPathComponent("audio-system.mov")) }
-            if options.captureMicrophone { session.micAudio = AudioWriter(kind: "mic", url: package.url.appendingPathComponent("audio-mic.mov")) }
+            if options.captureMicrophone { session.micAudio = AudioWriter(kind: "mic", url: package.url.appendingPathComponent("audio-mic.mov")); session.micAudio?.device = micName }
             try await session.begin()
             return session
         } catch {

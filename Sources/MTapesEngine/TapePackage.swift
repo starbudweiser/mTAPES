@@ -23,7 +23,8 @@ public struct TapeMeta: Codable, Equatable {
         public var file: String
         public var start: Double
         public var duration: Double
-        public init(kind: String, file: String, start: Double, duration: Double) { self.kind = kind; self.file = file; self.start = start; self.duration = duration }
+        public var device: String?             // nom du micro utilisé (piste « mic »)
+        public init(kind: String, file: String, start: Double, duration: Double, device: String? = nil) { self.kind = kind; self.file = file; self.start = start; self.duration = duration; self.device = device }
     }
 
     public struct Stats: Codable, Equatable {

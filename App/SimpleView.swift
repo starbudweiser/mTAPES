@@ -1,4 +1,5 @@
 // mTAPES — mode Simple : quoi filmer, Enregistrer. Maquette B (Socle standard). Rien n'est tronqué : le contenu défile si la place manque.
+import AVFoundation
 import SwiftUI
 
 struct SimpleView: View {
@@ -88,6 +89,123 @@ private struct Note: View {
 
 // MARK: États
 
+/// Une ligne de réglage : libellé à gauche, interrupteur à droite, sur toute la largeur.
+private struct SwitchRow: View {
+    let title: String
+    @Binding var isOn: Bool
+    var body: some View {
+        HStack(spacing: Socle.M.space3) {
+            Text(title).socle(Socle.T.body).foregroundStyle(Socle.C.text)
+            Spacer(minLength: Socle.M.space3)
+            Toggle("", isOn: $isOn).toggleStyle(.switch).tint(Socle.C.accentFill).labelsHidden().accessibilityLabel(title)
+        }
+        .frame(minHeight: 28)
+    }
+}
+
+/// Son (Mac, micro avec choix de la source et niveau d'entrée) et couleurs : une seule colonne, mêmes marges que les tuiles.
+private struct SoundPanel: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject var monitor: MicMonitor
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Socle.M.space2) {
+            Text(L.t("main.audio")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+            VStack(alignment: .leading, spacing: Socle.M.space1) {
+                SwitchRow(title: L.t("main.audio.system"), isOn: $model.recordSystemAudio)
+                SwitchRow(title: L.t("main.audio.mic"), isOn: $model.recordMic)
+                if model.recordMic { micDetail }
+            }
+            if model.mode == .advanced {
+                Text(L.t("main.color")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted).padding(.top, Socle.M.space2)
+                VStack(alignment: .leading, spacing: Socle.M.space1) {
+                    SwitchRow(title: L.t("main.color.p3"), isOn: $model.colorP3)
+                    Text(L.t("main.color.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .onAppear { model.refreshMics(); model.updateMicMonitor() }
+        .onDisappear { model.micMonitor.stop() }
+        .onChange(of: model.recordMic) { _, _ in model.updateMicMonitor() }
+        .onChange(of: model.micDeviceID) { _, _ in model.updateMicMonitor() }
+        .onChange(of: model.phase) { _, _ in model.updateMicMonitor() }
+        .onReceive(NotificationCenter.default.publisher(for: AVCaptureDevice.wasConnectedNotification)) { _ in model.refreshMics() }
+        .onReceive(NotificationCenter.default.publisher(for: AVCaptureDevice.wasDisconnectedNotification)) { _ in model.refreshMics(); model.updateMicMonitor() }
+    }
+
+    /// Source du micro et niveau d'entrée, décalés sous la ligne « Micro ».
+    private var micDetail: some View {
+        VStack(alignment: .leading, spacing: Socle.M.space2) {
+            if model.micDevices.isEmpty {
+                Text(L.t("mic.none")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
+            } else {
+                MenuField(options: [(id: "", label: defaultLabel)] + model.micDevices.map { (id: $0.id, label: $0.name) },
+                          selection: Binding(get: { model.micDeviceID ?? "" }, set: { model.micDeviceID = $0.isEmpty ? nil : $0 }),
+                          accessibility: L.t("mic.source"))
+                HStack(spacing: Socle.M.space3) {
+                    Text(L.t("mic.level")).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted)
+                    LevelBar(level: monitor.level)
+                        .accessibilityLabel(L.t("mic.level")).accessibilityValue("\(Int(monitor.level * 100)) %")
+                }
+                if monitor.denied { Text(L.t("err.mic")).socle(Socle.T.meta).foregroundStyle(Socle.C.danger).fixedSize(horizontal: false, vertical: true) }
+                else if monitor.quiet { Text(L.t("mic.quiet")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true) }
+            }
+        }
+        .padding(.leading, Socle.M.space4)
+        .padding(.bottom, Socle.M.space1)
+    }
+
+    private var defaultLabel: String {
+        let name = model.micDevices.first(where: { $0.isDefault })?.name
+        return name.map { L.t("mic.default.named", $0) } ?? L.t("mic.default")
+    }
+}
+
+/// Liste déroulante aux jetons Socle (champ creusé, chevron) : pleine largeur, alignée comme les autres champs.
+private struct MenuField<ID: Hashable>: View {
+    let options: [(id: ID, label: String)]
+    @Binding var selection: ID
+    let accessibility: String
+
+    var body: some View {
+        Menu {
+            ForEach(options, id: \.id) { o in
+                Button { selection = o.id } label: {
+                    if o.id == selection { Label(o.label, systemImage: "checkmark") } else { Text(o.label) }
+                }
+            }
+        } label: {
+            HStack(spacing: Socle.M.space2) {
+                Text(options.first { $0.id == selection }?.label ?? "").socle(Socle.T.body).foregroundStyle(Socle.C.textStrong)
+                    .lineLimit(1).truncationMode(.tail)
+                Spacer(minLength: Socle.M.space2)
+                Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold)).foregroundStyle(Socle.C.textMuted)
+            }
+            .padding(.horizontal, Socle.M.space3)
+            .frame(maxWidth: .infinity, minHeight: Socle.M.sizeControlLg, alignment: .leading)
+            .background(Socle.C.bgSunken)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+        .accessibilityLabel(accessibility)
+    }
+}
+
+/// Barre de niveau : vert, puis orange près de la saturation.
+private struct LevelBar: View {
+    let level: Double
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 3).fill(Socle.C.border)
+                RoundedRectangle(cornerRadius: 3).fill(level > 0.92 ? Socle.C.danger : Socle.C.success)
+                    .frame(width: max(0, g.size.width * level))
+            }
+        }
+        .frame(height: 6)
+    }
+}
+
 private struct IdleBody: View {
     @ObservedObject var model: AppModel
 
@@ -108,20 +226,7 @@ private struct IdleBody: View {
 
             if model.kind == .window { windowPicker }
 
-            VStack(alignment: .leading, spacing: Socle.M.space2) {
-                Text(L.t("main.audio")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
-                HStack(spacing: Socle.M.space4) {
-                    Toggle(L.t("main.audio.system"), isOn: $model.recordSystemAudio).toggleStyle(.switch).accessibilityLabel(L.t("main.audio.system"))
-                    Toggle(L.t("main.audio.mic"), isOn: $model.recordMic).toggleStyle(.switch).accessibilityLabel(L.t("main.audio.mic"))
-                    Spacer(minLength: 0)
-                }
-                .socle(Socle.T.label).foregroundStyle(Socle.C.text)
-                if model.mode == .advanced {
-                    Toggle(L.t("main.color.p3"), isOn: $model.colorP3).toggleStyle(.switch).accessibilityLabel(L.t("main.color.p3"))
-                        .socle(Socle.T.label).foregroundStyle(Socle.C.text)
-                    Text(L.t("main.color.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
-                }
-            }
+            SoundPanel(model: model, monitor: model.micMonitor)
 
             VStack(spacing: Socle.M.space3) {
                 Button { model.start() } label: {
@@ -147,18 +252,14 @@ private struct IdleBody: View {
                 Text(L.t("target.window.pick")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
                 Spacer()
                 Button(L.t("target.window.refresh")) { Task { await model.refreshWindows() } }.buttonStyle(SocleButtonStyle(.tertiary, height: 28)).fixedSize()
+                    .padding(.trailing, -Socle.M.space4)                       // le texte s'aligne sur la marge droite
             }
             if model.windows.isEmpty {
                 Text(L.t("target.window.none")).socle(Socle.T.body).foregroundStyle(Socle.C.textSubtle)
             } else {
-                Picker("", selection: Binding(get: { model.selectedWindow ?? 0 }, set: { model.selectedWindow = $0 })) {
-                    ForEach(model.windows, id: \.id) { w in
-                        Text(windowTitle(w)).tag(w.id)
-                    }
-                }
-                .labelsHidden()
-                .accessibilityLabel(L.t("target.window.pick"))
-                .frame(maxWidth: .infinity)
+                MenuField(options: model.windows.map { (id: $0.id, label: windowTitle($0)) },
+                          selection: Binding(get: { model.selectedWindow ?? model.windows.first?.id ?? 0 }, set: { model.selectedWindow = $0 }),
+                          accessibility: L.t("target.window.pick"))
             }
         }
     }
@@ -281,25 +382,27 @@ private struct DoneBody: View {
                 .socle(Socle.T.mono).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true)
             if let why = model.systemStop { Note(text: L.t("done.stoppedby." + why)) }
             Note(text: L.t("done.note"))
-            HStack(spacing: Socle.M.space2) {
-                ForEach(Destination.allCases, id: \.self) { d in
-                    Button(L.t("lib.export." + d.rawValue)) { export(d) }
-                        .buttonStyle(SocleButtonStyle(.primary, height: 30)).fixedSize().disabled(busy)
+            VStack(alignment: .leading, spacing: Socle.M.space2) {
+                Text(L.t("done.make")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+                HStack(spacing: Socle.M.space2) {
+                    ForEach(Destination.allCases, id: \.self) { d in
+                        Button(L.t("lib.export." + d.rawValue)) { export(d) }
+                            .buttonStyle(SocleButtonStyle(.primary, height: 32)).disabled(busy)
+                    }
                 }
+                Group {
+                    if busy { HStack(spacing: 8) { ProgressView().controlSize(.small); Text(L.t("lib.exporting")).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted) } }
+                    else if let status { Text(status).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
+                    else { Text(" ").socle(Socle.T.meta) }                      // réserve la ligne : les boutons du bas ne bougent pas
+                }
+                .frame(maxWidth: .infinity, minHeight: 18, alignment: .leading)
             }
-            if busy { HStack(spacing: 8) { ProgressView().controlSize(.small); Text(L.t("lib.exporting")).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted) } }
-            else if let status { Text(status).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
             HStack(spacing: Socle.M.space2) {
-                if let exported {
-                    Button(L.t("btn.reveal.film")) { NSWorkspace.shared.activateFileViewerSelecting([exported]) }
-                        .buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
-                }
-                Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([summary.url]) }
-                    .buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
+                Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([exported ?? summary.url]) }
+                    .buttonStyle(SocleButtonStyle(.secondary))
                 Button(L.t("btn.again")) { model.reset() }
-                    .buttonStyle(SocleButtonStyle(.primary)).fixedSize()
+                    .buttonStyle(SocleButtonStyle(.secondary))
             }
-            .frame(maxWidth: .infinity)
         }
     }
 }

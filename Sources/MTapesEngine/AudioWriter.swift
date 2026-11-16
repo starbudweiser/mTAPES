@@ -7,6 +7,7 @@ import Foundation
 final class AudioWriter {
     let kind: String                      // "system" | "mic"
     let url: URL
+    var device: String?
     private var writer: AVAssetWriter?
     private var input: AVAssetWriterInput?
     private(set) var firstPTS: CMTime?
@@ -52,7 +53,7 @@ final class AudioWriter {
         await writer.finishWriting()
         guard writer.status == .completed else { try? FileManager.default.removeItem(at: url); return nil }
         let end = lastEnd.isValid ? CMTimeGetSeconds(lastEnd) : CMTimeGetSeconds(firstPTS)
-        return .init(kind: kind, file: url.lastPathComponent, start: CMTimeGetSeconds(firstPTS), duration: max(0, end - CMTimeGetSeconds(firstPTS)))
+        return .init(kind: kind, file: url.lastPathComponent, start: CMTimeGetSeconds(firstPTS), duration: max(0, end - CMTimeGetSeconds(firstPTS)), device: device)
     }
 
     func cancel() {

@@ -148,8 +148,8 @@ struct LibraryView: View {
                 ScrollView { detailBody(item) }
                 HStack(spacing: Socle.M.space2) {
                     Button(L.t("btn.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }.buttonStyle(SocleButtonStyle(.secondary)).fixedSize()
-                    Button(L.t("lib.trash")) { store.trash(item); selection = nil }.buttonStyle(SocleButtonStyle(.tertiary)).fixedSize()
-                    Spacer()
+                    Spacer(minLength: Socle.M.space4)
+                    Button(L.t("lib.trash")) { store.trash(item); selection = nil }.buttonStyle(TrashButtonStyle()).fixedSize()
                 }
                 .padding(Socle.M.space4)
                 .background(Socle.C.surface)
@@ -185,7 +185,8 @@ struct LibraryView: View {
                 else if let s = status[item.id] { Text(s).socle(Socle.T.meta).foregroundStyle(Socle.C.textMuted).fixedSize(horizontal: false, vertical: true) }
                 if preview == nil && item.state == "complete" { EditorPanel(url: item.url, seconds: item.seconds).id(item.id) }
             }
-            .padding(Socle.M.space5)
+            .padding(.horizontal, Socle.M.space4)
+            .padding(.vertical, Socle.M.space5)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -226,11 +227,7 @@ struct EditorPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Socle.M.space3) {
-            HStack {
-                Text(L.t("ed.title")).socle(Socle.T.title).foregroundStyle(Socle.C.textStrong).fixedSize()
-                Spacer()
-                Button(L.t("ed.recompute")) { recompute() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
-            }
+            Text(L.t("ed.title")).socle(Socle.T.title).foregroundStyle(Socle.C.textStrong)
             HStack(spacing: Socle.M.space2) {
                 if player != nil {
                     Button(L.t("ed.preview.refresh")) { startPreview() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
@@ -238,7 +235,8 @@ struct EditorPanel: View {
                 } else {
                     Button(L.t("ed.preview")) { startPreview() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize().disabled(loadingPreview || spec == nil)
                 }
-                Spacer(minLength: 0)
+                Spacer(minLength: Socle.M.space3)
+                Button(L.t("ed.recompute")) { recompute() }.buttonStyle(SocleButtonStyle(.secondary, height: 28)).fixedSize()
             }
             if let error { Text(error).socle(Socle.T.meta).foregroundStyle(Socle.C.danger).fixedSize(horizontal: false, vertical: true) }
             if let player {
@@ -289,16 +287,25 @@ struct EditorPanel: View {
                 }
                 if !audioKinds.isEmpty {
                     let a = spec.audio ?? FinishingSpec.Audio()
-                    VStack(alignment: .leading, spacing: Socle.M.space2) {
-                        Text(L.t("ed.audio")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
-                        HStack(spacing: Socle.M.space3) {
-                            Toggle(L.t("ed.audio.keep"), isOn: Binding(get: { a.enabled }, set: { v in edit { var x = $0.audio ?? .init(); x.enabled = v; $0.audio = x } }))
-                                .toggleStyle(.switch).accessibilityLabel(L.t("ed.audio.keep")).socle(Socle.T.label).foregroundStyle(Socle.C.text).fixedSize()
-                            if audioKinds.contains("mic") { num(L.t("ed.audio.mic"), a.micGain) { v in edit { var x = $0.audio ?? .init(); x.micGain = min(2, max(0, v)); $0.audio = x } } }
-                            if audioKinds.contains("system") { num(L.t("ed.audio.system"), a.systemGain) { v in edit { var x = $0.audio ?? .init(); x.systemGain = min(2, max(0, v)); $0.audio = x } } }
-                            Spacer(minLength: 0)
+                    VStack(alignment: .leading, spacing: Socle.M.space1_5) {
+                        HStack {
+                            Text(L.t("ed.audio")).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
+                            Spacer()
                         }
-                        Text(L.t("ed.audio.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
+                        .overlay(alignment: .trailing) {
+                            Toggle("", isOn: Binding(get: { a.enabled }, set: { v in edit { var x = $0.audio ?? .init(); x.enabled = v; $0.audio = x } }))
+                                .toggleStyle(.switch).tint(Socle.C.accentFill).labelsHidden().accessibilityLabel(L.t("ed.audio.keep"))
+                        }
+                        if a.enabled {
+                            HStack(spacing: Socle.M.space2) {
+                                if audioKinds.contains("mic") { num(L.t("ed.audio.mic"), a.micGain) { v in edit { var x = $0.audio ?? .init(); x.micGain = min(2, max(0, v)); $0.audio = x } } }
+                                if audioKinds.contains("system") { num(L.t("ed.audio.system"), a.systemGain) { v in edit { var x = $0.audio ?? .init(); x.systemGain = min(2, max(0, v)); $0.audio = x } } }
+                                Spacer(minLength: 0)
+                            }
+                            Text(L.t("ed.audio.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text(L.t("ed.audio.off")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle)
+                        }
                     }
                 }
                 Text(L.t("ed.hint")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle).fixedSize(horizontal: false, vertical: true)
@@ -313,6 +320,7 @@ struct EditorPanel: View {
                 Text(title).socle(Socle.T.label).foregroundStyle(Socle.C.textMuted)
                 Spacer()
                 Button(L.t("ed.add")) { add() }.buttonStyle(SocleButtonStyle(.tertiary, height: 26)).fixedSize().accessibilityLabel(L.t("ed.add") + " " + title)
+                    .padding(.trailing, -Socle.M.space4)                         // le texte s'aligne sur la marge droite
             }
             if empty { Text(L.t("ed.none")).socle(Socle.T.meta).foregroundStyle(Socle.C.textSubtle) } else { content() }
         }
@@ -330,6 +338,7 @@ struct EditorPanel: View {
     private func deleteButton(_ action: @escaping () -> Void) -> some View {
         Button(action: action) { Image(systemName: "trash") }
             .buttonStyle(SocleButtonStyle(.tertiary, height: 28)).fixedSize().accessibilityLabel(L.t("ed.delete"))
+            .padding(.trailing, -Socle.M.space4)
     }
 
     /// Champ numérique compact (secondes, échelle, facteur…), validé à la fin de la saisie.
@@ -433,4 +442,29 @@ private struct PreviewPlayer: NSViewRepresentable {
         let v = AVPlayerView(); v.controlsStyle = .inline; v.player = player; return v
     }
     func updateNSView(_ v: AVPlayerView, context: Context) { if v.player !== player { v.player = player } }
+}
+
+/// Bouton « Mettre à la corbeille » : rouge pastel soutenu (jetons « danger » de Socle), à droite du pied de page.
+private struct TrashButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Styled(configuration: configuration)
+    }
+    private struct Styled: View {
+        let configuration: Configuration
+        @Environment(\.isEnabled) private var enabled
+        @State private var hover = false
+        var body: some View {
+            configuration.label
+                .socle(Socle.T.button)
+                .foregroundStyle(Socle.C.dangerSoft)
+                .padding(.horizontal, Socle.M.space4)
+                .frame(minHeight: Socle.M.sizeControlLg)
+                .background(Socle.C.dangerFill, in: RoundedRectangle(cornerRadius: Socle.M.radius))
+                .overlay(RoundedRectangle(cornerRadius: Socle.M.radius).fill(configuration.isPressed ? Color.black.opacity(0.15) : (hover ? Color.white.opacity(0.08) : Color.clear)))
+                .contentShape(Rectangle())
+                .opacity(enabled ? 1 : Socle.M.opacityDisabled)
+                .onHover { hover = $0 }
+                .animation(.easeOut(duration: 0.15), value: hover)
+        }
+    }
 }

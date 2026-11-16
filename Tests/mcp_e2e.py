@@ -84,6 +84,11 @@ meta = json.load(open(os.path.join(path, "meta.json")))
 check(meta["origin"] == "mcp" and meta["client"] == "essai" and meta["state"] == "complete", "meta.json : origine mcp, client, état complet")
 dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", os.path.join(path, "raw.mov")], capture_output=True, text=True).stdout)
 check(abs(dur - stop["duration_s"]) < 0.3, f"raw.mov lisible, durée {dur:.2f} s")
+# Micros : liste, et choix d'un micro inexistant refusé avant toute demande d'autorisation.
+err, mics = call("tapes_list_targets", kind="microphone")
+check(not err and isinstance(mics, list) and all(m["kind"] == "microphone" and "mic_id" in m for m in mics), f"tapes_list_targets microphone : {len(mics) if isinstance(mics, list) else mics} micro(s)")
+err, badmic = call("tapes_start", target="display", audio="mic", mic_device="micro-qui-n-existe-pas")
+check(err and "micro" in str(badmic).lower(), "tapes_start mic_device inconnu : refusé avec un message clair")
 # Son : une prise avec le son du Mac (le micro demande une autorisation à l'utilisateur : non testé ici).
 err, bad = call("tapes_start", target="display", audio="radio")
 check(err, "tapes_start audio invalide : refusé")
