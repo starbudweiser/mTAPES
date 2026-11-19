@@ -227,7 +227,7 @@ final class AppModel: ObservableObject {
     /// Termine la prise en cours et renvoie son résumé.
     @discardableResult
     func finishTake() async -> Result<TapeSummary, Error> {
-        guard phase == .recording, let s = session else { return .failure(ControlError("Aucune prise en cours.")) }
+        guard phase == .recording, let s = session else { return .failure(ControlError("No take is recording.")) }
         ticker?.invalidate(); ticker = nil
         phase = .finishing
         defer { session = nil }

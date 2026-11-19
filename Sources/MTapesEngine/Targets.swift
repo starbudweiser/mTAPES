@@ -43,7 +43,7 @@ public enum TargetCatalog {
         let content = try await content()
         var out: [TargetInfo] = []
         for d in content.displays {
-            out.append(TargetInfo(kind: "display", id: d.displayID, title: "Écran \(d.displayID) · \(Int(d.width)) × \(Int(d.height)) pt",
+            out.append(TargetInfo(kind: "display", id: d.displayID, title: "Display \(d.displayID) · \(Int(d.width)) × \(Int(d.height)) pt",
                                   app: nil, bundle: nil,
                                   bounds: [d.frame.origin.x, d.frame.origin.y, d.frame.width, d.frame.height], onScreen: true))
         }

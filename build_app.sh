@@ -15,6 +15,8 @@ swiftc -O -swift-version 5 -target arm64-apple-macos15 -o "$APP/Contents/MacOS/m
 
 [ -f assets/AppIcon.icns ] && cp assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# Description de l'autorisation micro dans les 4 langues
+for l in fr en es it; do mkdir -p "$APP/Contents/Resources/$l.lproj"; cp "Resources/$l.lproj/InfoPlist.strings" "$APP/Contents/Resources/$l.lproj/InfoPlist.strings"; done
 if [ -n "${DEV:-}" ]; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier fr.stephan.mtapes.dev" "$APP/Contents/Info.plist"
   /usr/libexec/PlistBuddy -c "Set :CFBundleName mTAPES-dev" "$APP/Contents/Info.plist"

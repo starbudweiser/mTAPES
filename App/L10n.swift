@@ -5,11 +5,14 @@ enum L {
     /// Forcer une langue (essais : --lang fr|en|es|it).
     nonisolated(unsafe) static var override: String?
 
-    /// Langue du système si elle fait partie des quatre, sinon l'anglais.
+    /// Première langue préférée du système parmi les quatre prises en charge, sinon l'anglais.
     static var lang: String {
         if let o = override, tables[o] != nil { return o }
-        let code = String((Locale.preferredLanguages.first ?? "en").prefix(2))
-        return tables[code] != nil ? code : "en"
+        for id in Locale.preferredLanguages {
+            let code = String(id.prefix(2)).lowercased()
+            if tables[code] != nil { return code }
+        }
+        return "en"
     }
     static var locale: Locale { Locale(identifier: lang) }
 
