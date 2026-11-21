@@ -74,3 +74,9 @@ Un enregistreur d'écran macOS natif qui monte vos démos tout seul, et que n'im
 **À propos** : mTAPES est réalisé par Starbudweiser & Claude Code (Anthropic). Fait partie du **DESKTOP MAC TOOLKIT**. Licence MIT, © 2026 Starbudweiser. Fourni en l'état, sans garantie.
 
 **État** : version 1.0.1, appli de barre de menus (macOS 15+, Apple Silicon), signée, notarisée, avec mise à jour automatique (recherche quotidienne, jamais pendant une prise ou un export, réglable depuis « Rechercher les mises à jour… ») ; installation : télécharger le zip depuis la [page Releases](https://github.com/starbudweiser/mTAPES/releases/latest), le décompresser et glisser mTAPES.app dans Applications. Enregistrement d'un écran, d'une fenêtre, d'une appli ou d'une zone ; finition automatique (zooms, temps morts accélérés, légendes, curseur, cadre) ; exports GIF, MP4 1080p et vertical ; bibliothèque et retouche à la main avec aperçu ; serveur MCP (10 outils) pour qu'une IA enregistre et monte ; modes Simple et Avancé ; 4 langues. Son (son du Mac, micro) en pistes à part, couleurs sRGB ou Display P3. **Pas encore** : vidéo HDR (les écrans sont filmés en SDR), moteur de montage local sans IA. Maquettes : [`maquettes/index.html`](maquettes/index.html) ; plan : [`ARCHITECTURE.md`](ARCHITECTURE.md). Chiffres mesurés : [`bench/RESULTS.md`](bench/RESULTS.md).
+
+## Support / Soutenir
+
+This app is free. If it is useful to you, you can support the project (optional, no reward expected): [GitHub Sponsors](https://github.com/sponsors/starbudweiser).
+
+Cette appli est gratuite. Si elle vous est utile, vous pouvez soutenir le projet (facultatif, sans contrepartie) : [GitHub Sponsors](https://github.com/sponsors/starbudweiser).
